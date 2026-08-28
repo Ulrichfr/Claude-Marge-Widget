@@ -723,6 +723,7 @@ ipcMain.handle('updates:apply', async () => {
     if (settingsWin && !settingsWin.isDestroyed()) settingsWin.webContents.send('updates:step', step);
   };
   const result = await updater.apply(APP_DIR, process.execPath, send);
+  if (!result.ok) trace(`update failed: ${result.reason} ${result.detail || ''}`.trim());
   if (result.ok && result.changed) {
     trace(`updated to ${result.short}`);
     store.save({ announcedUpdate: result.sha });

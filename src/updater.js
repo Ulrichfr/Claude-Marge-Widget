@@ -97,14 +97,32 @@ async function check(dir) {
 
 // --- Applying ----------------------------------------------------------------
 
-/** npm lives outside a launchd PATH, so ask a login shell where it is. */
+/**
+ * Build the PATH a launchd service needs to run npm.
+ *
+ * Finding npm is not enough: npm is a script whose first line is
+ * `#!/usr/bin/env node`, so running it without node on the PATH fails with
+ * "env: node: No such file or directory". Both live in the same place on a
+ * Homebrew or nvm install, but not always, so both are looked up.
+ */
+function pathWith(npmPath, nodePath, currentPath) {
+  const dirs = [npmPath, nodePath]
+    .filter(Boolean)
+    .map((p) => path.dirname(p))
+    .filter((d, i, all) => all.indexOf(d) === i && !(currentPath || '').split(':').includes(d));
+  return dirs.concat(currentPath || '').filter(Boolean).join(':');
+}
+
+/** npm and node live outside a launchd PATH, so ask a login shell where they are. */
 async function findNpm() {
-  try {
-    const found = await run('/bin/sh', ['-lc', 'command -v npm'], { timeout: 20000 });
-    return found || null;
-  } catch (_) {
-    return null;
-  }
+  const ask = async (what) => {
+    try { return (await run('/bin/sh', ['-lc', `command -v ${what}`], { timeout: 20000 })) || null; }
+    catch (_) { return null; }
+  };
+  const npm = await ask('npm');
+  if (!npm) return null;
+  const node = await ask('node');
+  return { npm, env: { ...process.env, PATH: pathWith(npm, node, process.env.PATH) } };
 }
 
 /**
@@ -144,7 +162,8 @@ async function apply(dir, execPath, onStep = () => {}) {
     onStep('installing');
     const npm = await findNpm();
     if (npm) {
-      await run(npm, ['install', '--no-audit', '--no-fund', '--silent'], { cwd: dir });
+      await run(npm.npm, ['install', '--no-audit', '--no-fund', '--silent'],
+        { cwd: dir, env: npm.env });
     }
 
     onStep('testing');
@@ -165,5 +184,5 @@ async function apply(dir, execPath, onStep = () => {}) {
 module.exports = {
   REPO, BRANCH, API,
   parseRemote, compare, isGitCheckout, localSha, isDirty,
-  fetchRemote, check, apply, runTests, findNpm
+  fetchRemote, check, apply, runTests, findNpm, pathWith
 };

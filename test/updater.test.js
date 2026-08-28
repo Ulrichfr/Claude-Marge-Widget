@@ -50,4 +50,25 @@ test('a directory without git cannot update itself', () => {
   assert.strictEqual(u.isGitCheckout('/tmp'), false);
 });
 
+
+test('running npm needs node on the PATH, not just npm', () => {
+  const built = u.pathWith('/opt/homebrew/bin/npm', '/opt/homebrew/bin/node', '/usr/bin:/bin');
+  assert.strictEqual(built, '/opt/homebrew/bin:/usr/bin:/bin',
+    'npm is a script with a #!/usr/bin/env node line: without node it cannot run at all');
+});
+
+test('npm and node in different places both make it onto the PATH', () => {
+  const built = u.pathWith('/usr/local/bin/npm', '/home/u/.nvm/versions/node/v22/bin/node', '/usr/bin');
+  assert.strictEqual(built, '/usr/local/bin:/home/u/.nvm/versions/node/v22/bin:/usr/bin');
+});
+
+test('a directory already on the PATH is not added twice', () => {
+  assert.strictEqual(u.pathWith('/usr/bin/npm', '/usr/bin/node', '/usr/bin:/bin'), '/usr/bin:/bin');
+});
+
+test('a missing node still leaves a usable PATH', () => {
+  assert.strictEqual(u.pathWith('/opt/homebrew/bin/npm', null, '/usr/bin'),
+    '/opt/homebrew/bin:/usr/bin');
+});
+
 console.log(`\n${passed} updater tests passed`);
