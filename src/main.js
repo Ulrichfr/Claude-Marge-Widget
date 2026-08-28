@@ -16,6 +16,7 @@ const os = require('os');
 const { fetchUsage } = require('./usage');
 const I18N = require('./i18n');
 const { nextDelay, shouldRefreshOnReveal } = require('./schedule');
+const autostart = require('./autostart');
 const {
   G, layout, boundsForDisplay: computeBounds,
   isOuterRightEdge, inHotZone, insideKeepAlive
@@ -257,6 +258,31 @@ function updateTrayTitle() {
 const MENU = I18N.pick(app.getLocale()).menu;
 const IDLE_LABEL = 'Claude Marge';
 
+/** Rebuilt on every change so the checkbox always shows the real state. */
+function buildMenu() {
+  if (!tray) return;
+  const atLogin = autostart.isEnabled();
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: MENU.refresh, click: () => refresh() },
+    { label: MENU.peek, click: () => { show(); setTimeout(scheduleHide, 3000); } },
+    { type: 'separator' },
+    {
+      label: MENU.startAtLogin,
+      type: 'checkbox',
+      checked: atLogin === true,
+      // Unknown state means no service is registered: nothing to toggle.
+      enabled: atLogin !== null,
+      click: (item) => { autostart.setEnabled(item.checked); buildMenu(); }
+    },
+    { label: MENU.restartNow, click: () => autostart.restartNow() },
+    { type: 'separator' },
+    { label: MENU.open, click: () => shell.showItemInFolder(CONFIG_PATH) },
+    { label: MENU.reload, click: () => { config = loadConfig(); placeOn(activeDisplay()); buildMenu(); } },
+    { type: 'separator' },
+    { label: MENU.quit, click: () => { app.isQuitting = true; app.quit(); } }
+  ]));
+}
+
 function createTray() {
   // macOS reads tray.png as 16 points and picks up tray@2x.png on its own.
   // Linux panels want a bigger bitmap, so they get their own file.
@@ -269,15 +295,7 @@ function createTray() {
   } catch (_) {
     return; // no system tray on this session: carry on without one
   }
-  tray.setContextMenu(Menu.buildFromTemplate([
-    { label: MENU.refresh, click: () => refresh() },
-    { label: MENU.peek, click: () => { show(); setTimeout(scheduleHide, 3000); } },
-    { type: 'separator' },
-    { label: MENU.open, click: () => shell.showItemInFolder(CONFIG_PATH) },
-    { label: MENU.reload, click: () => { config = loadConfig(); placeOn(activeDisplay()); } },
-    { type: 'separator' },
-    { label: MENU.quit, click: () => { app.isQuitting = true; app.quit(); } }
-  ]));
+  buildMenu();
   updateTrayTitle();
 }
 
@@ -314,21 +332,7 @@ ipcMain.on('request-refresh', () => refresh());
 // Control capture: render the window off screen and quit. Used to check the
 // real rendering on a machine with no compositor, or in CI.
 if (process.env.MARGE_CAPTURE) {
-  // Why did it stop? A widget that exits silently and is restarted by the system
-// loses its backoff each time, which is how a rate limit becomes permanent.
-// These lines cost nothing and turn a mystery into a fact.
-function trace(event) {
-  console.log(`[${new Date().toISOString()}] lifecycle: ${event}`);
-}
-app.on('before-quit', () => trace('before-quit'));
-app.on('will-quit', () => trace('will-quit'));
-app.on('quit', (_e, code) => trace(`quit code=${code}`));
-process.on('exit', (code) => trace(`process exit code=${code}`));
-process.on('uncaughtException', (err) => trace(`uncaught: ${err && err.stack}`));
-process.on('unhandledRejection', (err) => trace(`unhandled rejection: ${err}`));
-
-app.whenReady().then(() => {
-  trace(`started pid=${process.pid} locale=${app.getLocale()}`);
+  app.whenReady().then(() => {
     setTimeout(async () => {
       try {
         const image = await win.webContents.capturePage();

@@ -10,7 +10,11 @@
     <string>__APP_DIR__</string>
   </array>
   <key>RunAtLoad</key><true/>
-  <key>KeepAlive</key><true/>
+  <!-- Restart after a crash, but honour a deliberate Quit from the menu. -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key><false/>
+  </dict>
   <key>StandardOutPath</key><string>__APP_DIR__/widget.log</string>
   <key>StandardErrorPath</key><string>__APP_DIR__/widget.log</string>
 </dict>

@@ -150,6 +150,24 @@ d'état :
 }
 ```
 
+### Le menu de la barre d'état
+
+| Entrée | Ce qu'elle fait |
+|---|---|
+| Rafraîchir maintenant | Interroge l'API tout de suite, quel que soit le rythme prévu. |
+| Afficher 3 secondes | Montre le widget sans aller chercher le bord. |
+| **Lancer au démarrage** | Case à cocher. La décocher laisse tourner le widget en cours, il ne reviendra simplement pas à ta prochaine session. |
+| **Relancer le widget** | Redémarre par le superviseur, pratique après un changement de configuration. |
+| Ouvrir la configuration | Montre `config.json` dans le gestionnaire de fichiers. |
+| Recharger la configuration | Applique le fichier sans redémarrer. |
+| Quitter | Quitte vraiment. Le démarrage automatique relance après un plantage, jamais après un « Quitter » volontaire. |
+
+Tu l'as fermé et tu le veux de retour ?
+`launchctl kickstart gui/$(id -u)/com.claudemarge.widget` sur macOS,
+`systemctl --user start claude-marge` sur Linux.
+
+### Le fichier
+
 `verticalAnchor` vaut 0 en haut de l'écran et 1 en bas. `followCursorDisplay`
 fait apparaître le widget sur l'écran où se trouve la souris. En multi-écrans,
 seuls les vrais bords extérieurs déclenchent : la jointure entre deux écrans

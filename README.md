@@ -144,6 +144,23 @@ menu.
 }
 ```
 
+### The tray menu
+
+| Item | What it does |
+|---|---|
+| Refresh now | Ask the API immediately, whatever the schedule says. |
+| Show for 3 seconds | Reveal the widget without reaching for the edge. |
+| **Start at login** | Checkbox. Turning it off leaves the running widget alone, it simply will not come back at your next login. |
+| **Restart the widget** | Relaunch through the supervisor, handy after a config change. |
+| Open configuration | Reveal `config.json` in the file manager. |
+| Reload configuration | Apply the file without restarting. |
+| Quit | Really quits. The login item restarts the widget after a crash, never after a deliberate quit. |
+
+Closed it and want it back? `launchctl kickstart gui/$(id -u)/com.claudemarge.widget`
+on macOS, `systemctl --user start claude-marge` on Linux.
+
+### The file
+
 `verticalAnchor` is 0 at the top of the screen and 1 at the bottom.
 `followCursorDisplay` makes the widget appear on whichever display holds the
 mouse. On a multi-monitor setup, only real outer edges trigger it: the seam

@@ -35,7 +35,8 @@
         unknown: 'Unknown state.'
       },
       menu: { refresh: 'Refresh now', peek: 'Show for 3 seconds', open: 'Open configuration',
-        reload: 'Reload configuration', quit: 'Quit' }
+        reload: 'Reload configuration', quit: 'Quit',
+        startAtLogin: 'Start at login', restartNow: 'Restart the widget' }
     },
 
     fr: {
@@ -63,7 +64,8 @@
         unknown: 'État inconnu.'
       },
       menu: { refresh: 'Rafraîchir maintenant', peek: 'Afficher 3 secondes',
-        open: 'Ouvrir la configuration', reload: 'Recharger la configuration', quit: 'Quitter' }
+        open: 'Ouvrir la configuration', reload: 'Recharger la configuration', quit: 'Quitter',
+        startAtLogin: 'Lancer au démarrage', restartNow: 'Relancer le widget' }
     },
 
     es: {
@@ -91,7 +93,8 @@
         unknown: 'Estado desconocido.'
       },
       menu: { refresh: 'Actualizar ahora', peek: 'Mostrar 3 segundos',
-        open: 'Abrir la configuración', reload: 'Recargar la configuración', quit: 'Salir' }
+        open: 'Abrir la configuración', reload: 'Recargar la configuración', quit: 'Salir',
+        startAtLogin: 'Iniciar al arrancar', restartNow: 'Reiniciar el widget' }
     },
 
     de: {
@@ -119,7 +122,8 @@
         unknown: 'Unbekannter Zustand.'
       },
       menu: { refresh: 'Jetzt aktualisieren', peek: '3 Sekunden anzeigen',
-        open: 'Konfiguration öffnen', reload: 'Konfiguration neu laden', quit: 'Beenden' }
+        open: 'Konfiguration öffnen', reload: 'Konfiguration neu laden', quit: 'Beenden',
+        startAtLogin: 'Beim Anmelden starten', restartNow: 'Widget neu starten' }
     },
 
     it: {
@@ -147,7 +151,8 @@
         unknown: 'Stato sconosciuto.'
       },
       menu: { refresh: 'Aggiorna ora', peek: 'Mostra per 3 secondi',
-        open: 'Apri la configurazione', reload: 'Ricarica la configurazione', quit: 'Esci' }
+        open: 'Apri la configurazione', reload: 'Ricarica la configurazione', quit: 'Esci',
+        startAtLogin: "Avvia all'accesso", restartNow: 'Riavvia il widget' }
     },
 
     zh: {
@@ -175,7 +180,8 @@
         unknown: '状态未知。'
       },
       menu: { refresh: '立即刷新', peek: '显示 3 秒', open: '打开配置',
-        reload: '重新加载配置', quit: '退出' }
+        reload: '重新加载配置', quit: '退出',
+        startAtLogin: '登录时启动', restartNow: '重启小组件' }
     },
 
     ja: {
@@ -203,7 +209,8 @@
         unknown: '不明な状態です。'
       },
       menu: { refresh: '今すぐ更新', peek: '3 秒間表示', open: '設定を開く',
-        reload: '設定を再読み込み', quit: '終了' }
+        reload: '設定を再読み込み', quit: '終了',
+        startAtLogin: 'ログイン時に起動', restartNow: 'ウィジェットを再起動' }
     }
   };
 
