@@ -106,6 +106,9 @@ function createWindow() {
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   win.setIgnoreMouseEvents(true); // never steal a click, never take focus
 
+  win.on('closed', () => trace('window closed'));
+  win.webContents.on('render-process-gone', (_e, d) => trace(`renderer gone: ${d.reason}`));
+  win.webContents.on('unresponsive', () => trace('renderer unresponsive'));
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.webContents.on('did-finish-load', () => {
     ready = true;
@@ -282,7 +285,21 @@ function createTray() {
 
 if (!app.requestSingleInstanceLock()) app.quit();
 
+// Why did it stop? A widget that exits silently and is restarted by the system
+// loses its backoff each time, which is how a rate limit becomes permanent.
+// These lines cost nothing and turn a mystery into a fact.
+function trace(event) {
+  console.log(`[${new Date().toISOString()}] lifecycle: ${event}`);
+}
+app.on('before-quit', () => trace('before-quit'));
+app.on('will-quit', () => trace('will-quit'));
+app.on('quit', (_e, code) => trace(`quit code=${code}`));
+process.on('exit', (code) => trace(`process exit code=${code}`));
+process.on('uncaughtException', (err) => trace(`uncaught: ${err && err.stack}`));
+process.on('unhandledRejection', (err) => trace(`unhandled rejection: ${err}`));
+
 app.whenReady().then(() => {
+  trace(`started pid=${process.pid} locale=${app.getLocale()}`);
   if (process.platform === 'darwin' && app.dock) app.dock.hide();
   createWindow();
   createTray();
@@ -297,7 +314,21 @@ ipcMain.on('request-refresh', () => refresh());
 // Control capture: render the window off screen and quit. Used to check the
 // real rendering on a machine with no compositor, or in CI.
 if (process.env.MARGE_CAPTURE) {
-  app.whenReady().then(() => {
+  // Why did it stop? A widget that exits silently and is restarted by the system
+// loses its backoff each time, which is how a rate limit becomes permanent.
+// These lines cost nothing and turn a mystery into a fact.
+function trace(event) {
+  console.log(`[${new Date().toISOString()}] lifecycle: ${event}`);
+}
+app.on('before-quit', () => trace('before-quit'));
+app.on('will-quit', () => trace('will-quit'));
+app.on('quit', (_e, code) => trace(`quit code=${code}`));
+process.on('exit', (code) => trace(`process exit code=${code}`));
+process.on('uncaughtException', (err) => trace(`uncaught: ${err && err.stack}`));
+process.on('unhandledRejection', (err) => trace(`unhandled rejection: ${err}`));
+
+app.whenReady().then(() => {
+  trace(`started pid=${process.pid} locale=${app.getLocale()}`);
     setTimeout(async () => {
       try {
         const image = await win.webContents.capturePage();
