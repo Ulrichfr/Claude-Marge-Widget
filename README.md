@@ -156,17 +156,28 @@ does not notify you every two minutes. Set it to `[]` to stay silent.
 `language` is `auto`, or one of `en`, `fr`, `es`, `de`, `it`, `zh`, `ja`.
 `checkUpdates` turns the daily look at the repository on and off. `theme` is one
 of `midnight`, `graphite`, `nordic`, `ember`, `matcha`, `lilac`, `daylight`,
-`sand`. `timeFormat` is `auto`, `12` or `24`. `displayId` is `primary` or a
+`sand`, `glass`, `winxp`, `win11`, `ubuntu`. `timeFormat` is `auto`, `12` or
+`24`. `displayId` is `primary` or a
 screen id, and is ignored while the widget follows the mouse.
 
-### Eight themes, light and dark
+### Twelve themes
 
 <img src="docs/themes.png" alt="The pill in the eight themes: Midnight, Graphite, Nordic, Ember, Matcha, Lilac, Daylight and Sand" width="820">
 
-Six dark, two light. The gauge tones stay semantic in every one of them: green
+Six neutral darks, two lights, and four with a point of view: **Liquid Glass**,
+**Windows XP** with its Luna title bar, **Windows 11** in Mica, and **Ubuntu**
+in Yaru aubergine. The gauge tones stay semantic in every one of them: green
 means room left, red means the ceiling is close, and the light themes get
 darker, denser tones because a pale yellow on white says nothing at all. The
 settings window wears the theme too, so the choice previews itself.
+
+**About Liquid Glass.** The window really is transparent, so the wallpaper shows
+through for real, with a specular rim and a trace of dispersion at the edges.
+What it does not do is blur the desktop behind it: a transparent Electron window
+can only blur what the page itself contains, and blurring the desktop would mean
+macOS vibrancy, which paints the whole window rectangle rather than the shape of
+a rounded pill. Apple's material leans on clarity and refraction more than on
+frost, so this reads as glass; it is simply clear rather than frosted.
 
 Times follow your system by default, or you can pin **24 h** or **AM / PM**.
 
@@ -240,7 +251,7 @@ once a day and tells you when something is waiting, once per version, and never
 installs anything on its own.
 
 The part worth knowing: **an update that breaks the test suite is undone.**
-The commit you were on is recorded first, the 71 tests run before the restart,
+The commit you were on is recorded first, the 72 tests run before the restart,
 and a failure rolls the checkout back to where it was. A bad push upstream
 cannot leave you with a dead widget.
 
@@ -285,7 +296,7 @@ Useful commands:
 npm start                      # hover behaviour
 npm run demo                   # stays open, handy for positioning
 npm run usage                  # raw quotas as JSON, no interface
-npm test                       # 71 tests
+npm test                       # 72 tests
 tail ~/.claude-marge/widget.log   # one line per state change
 ```
 
@@ -293,7 +304,7 @@ tail ~/.claude-marge/widget.log   # one line per state change
 
 ## What is verified
 
-`npm test` runs 71 tests, covering the places where a mistake shows up
+`npm test` runs 72 tests, covering the places where a mistake shows up
 immediately.
 
 **Hover geometry and displays, 22 tests.** The right edge of a multi-monitor
@@ -302,10 +313,11 @@ been unplugged falling back to the primary, the window staying on screen
 whatever the number of models, and above all the absence of flicker: the area
 that keeps the widget open must always contain the strip that triggers it.
 
-**Themes and time format, 8 tests.** Every theme defines every surface and tone,
+**Themes and time format, 9 tests.** Every theme defines every surface and tone,
 an unknown one falls back rather than painting nothing, the four tones stay
 distinct so the gauges cannot lie, light themes use dark ink and dark themes
-light ink, and `auto` genuinely lets the locale decide instead of forcing a
+light ink, a translucent theme has to declare its material rather than being a
+flat wash, and `auto` genuinely lets the locale decide instead of forcing a
 cycle.
 
 **Quota normalisation, 8 tests.** A missing quota never becomes a displayed

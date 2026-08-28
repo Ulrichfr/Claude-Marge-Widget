@@ -91,7 +91,12 @@ function applyTheme() {
   for (const [name, value] of Object.entries(THEMES.widgetVars(theme))) {
     root.setProperty(name, value);
   }
-  document.documentElement.dataset.light = THEMES.get(theme).dark ? 'false' : 'true';
+  const t = THEMES.get(theme);
+  const root2 = document.documentElement;
+  root2.dataset.light = t.dark ? 'false' : 'true';
+  root2.dataset.sheen = t.sheen ? '1' : '0';
+  root2.dataset.hasFont = t.font ? 'true' : 'false';
+  root2.dataset.header = t.header ? 'true' : 'false';
 }
 
 function applyGeometry() {

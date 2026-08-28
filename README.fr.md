@@ -162,19 +162,32 @@ silence complet. `shortcut` bascule l'épinglage ; mets `""` pour n'enregistrer
 aucun raccourci. `language` vaut `auto`, ou l'un de `en`, `fr`, `es`, `de`,
 `it`, `zh`, `ja`. `checkUpdates` active ou coupe la vérification quotidienne du
 dépôt. `theme` vaut `midnight`, `graphite`, `nordic`, `ember`, `matcha`,
-`lilac`, `daylight` ou `sand`. `timeFormat` vaut `auto`, `12` ou `24`.
+`lilac`, `daylight`, `sand`, `glass`, `winxp`, `win11` ou `ubuntu`.
+`timeFormat` vaut `auto`, `12` ou `24`.
 `displayId` vaut `primary` ou un identifiant d'écran, et reste ignoré tant que
 le widget suit la souris.
 
-### Huit thèmes, clairs et sombres
+### Douze thèmes
 
 <img src="docs/themes.png" alt="La pilule dans les huit thèmes : Midnight, Graphite, Nordic, Ember, Matcha, Lilac, Daylight et Sand" width="820">
 
-Six sombres, deux clairs. Les couleurs de jauge restent sémantiques dans tous :
-vert veut dire qu'il reste de la marge, rouge que le plafond est proche, et les
-thèmes clairs reçoivent des teintes plus foncées et plus denses, parce qu'un
-jaune pâle sur blanc ne dit rien du tout. La fenêtre de réglages porte elle
-aussi le thème, donc le choix se prévisualise tout seul.
+Six sombres neutres, deux clairs, et quatre qui ont un parti pris : **Liquid
+Glass**, **Windows XP** avec sa barre de titre Luna, **Windows 11** en Mica, et
+**Ubuntu** en aubergine Yaru. Les couleurs de jauge restent sémantiques dans
+tous : vert veut dire qu'il reste de la marge, rouge que le plafond est proche,
+et les thèmes clairs reçoivent des teintes plus foncées et plus denses, parce
+qu'un jaune pâle sur blanc ne dit rien du tout. La fenêtre de réglages porte
+elle aussi le thème, donc le choix se prévisualise tout seul.
+
+**À propos de Liquid Glass.** La fenêtre est réellement transparente, donc le
+fond d'écran se voit à travers pour de bon, avec une arête spéculaire et une
+trace de dispersion sur les bords. Ce qu'il ne fait pas, c'est flouter le bureau
+derrière : une fenêtre Electron transparente ne peut flouter que ce que la page
+contient elle-même, et flouter le bureau passerait par la vibrancy de macOS, qui
+peint tout le rectangle de la fenêtre au lieu de la forme d'une pilule arrondie.
+Le matériau d'Apple mise davantage sur la clarté et la réfraction que sur le
+givre, donc ça se lit comme du verre ; simplement du verre clair plutôt que
+dépoli.
 
 L'heure suit ton système par défaut, ou se fige en **24 h** ou **AM / PM**.
 
@@ -251,7 +264,7 @@ jour**, il regarde une fois par jour et te dit quand quelque chose attend, une
 seule fois par version, sans jamais rien installer de lui-même.
 
 Le point qui compte : **une mise à jour qui casse les tests est annulée.** Le
-commit d'origine est noté d'abord, les 71 tests tournent avant la relance, et un
+commit d'origine est noté d'abord, les 72 tests tournent avant la relance, et un
 échec ramène la copie exactement où elle était. Une mauvaise publication en
 amont ne peut pas te laisser un widget mort.
 
@@ -298,7 +311,7 @@ Commandes utiles :
 npm start                         # comportement au survol
 npm run demo                      # reste ouvert, pratique pour régler la position
 npm run usage                     # les quotas bruts en JSON, sans interface
-npm test                          # 71 tests
+npm test                          # 72 tests
 tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 ```
 
@@ -306,7 +319,7 @@ tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 
 ## Ce qui est vérifié
 
-`npm test` lance 71 tests, sur les endroits où une erreur se voit tout de suite.
+`npm test` lance 72 tests, sur les endroits où une erreur se voit tout de suite.
 
 **La géométrie du survol et les écrans, 22 tests.** Le bord droit en
 multi-écrans, la jointure entre deux écrans qui ne déclenche jamais, un écran
@@ -315,11 +328,12 @@ l'écran quel que soit le nombre de modèles, et surtout l'absence de
 clignotement : la zone qui garde le widget ouvert doit toujours contenir la
 bande qui le déclenche.
 
-**Les thèmes et le format d'heure, 8 tests.** Chaque thème définit toutes ses
+**Les thèmes et le format d'heure, 9 tests.** Chaque thème définit toutes ses
 surfaces et toutes ses teintes, un thème inconnu retombe sur un autre plutôt que
 de ne rien peindre, les quatre teintes restent distinctes pour que les jauges ne
-mentent pas, les thèmes clairs utilisent une encre foncée et l'inverse, et
-`auto` laisse vraiment la locale décider au lieu de forcer un cycle.
+mentent pas, les thèmes clairs utilisent une encre foncée et l'inverse, un thème
+translucide doit déclarer son matériau au lieu d'être un simple voile, et `auto`
+laisse vraiment la locale décider au lieu de forcer un cycle.
 
 **La normalisation des quotas, 8 tests.** Un quota absent ne devient jamais un
 zéro affiché, un modèle exposé deux fois par l'API n'apparaît qu'une fois, une

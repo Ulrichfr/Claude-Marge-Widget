@@ -30,11 +30,18 @@ html, body {
   -webkit-font-smoothing: antialiased;
   /* System faces first, then CJK fallbacks so Chinese and Japanese render
      with the right shapes instead of tofu boxes. */
+  font-family: var(--font, inherit);
   font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Inter",
     "Segoe UI Variable", system-ui, "Cantarell", "Helvetica Neue",
     "PingFang SC", "Hiragino Sans", "Noto Sans CJK SC", "Noto Sans CJK JP",
     "Microsoft YaHei", "Meiryo", sans-serif;
 }
+
+/* A theme may impose its own face: Tahoma for XP, Segoe for Windows 11,
+   Ubuntu for Yaru. Applied last so it wins over the stack above. */
+:root[data-has-font="true"] body,
+:root[data-has-font="true"] .pill,
+:root[data-has-font="true"] .panel { font-family: var(--font); }
 
 .stage {
   position: absolute;
@@ -50,7 +57,11 @@ html, body {
   position: relative;
   width: var(--pill-w, 92px);
   background: var(--pill-bg);
-  border-radius: 32px 0 0 32px;
+  border-radius: var(--radius-pill, 32px) 0 0 var(--radius-pill, 32px);
+  border: 1px solid var(--border, transparent);
+  border-right: none;
+  backdrop-filter: blur(var(--blur, 0px)) saturate(var(--saturate, 100%));
+  -webkit-backdrop-filter: blur(var(--blur, 0px)) saturate(var(--saturate, 100%));
   padding: var(--pill-pad, 22px) 0;
   display: flex;
   flex-direction: column;
@@ -67,6 +78,60 @@ html, body {
   transform: translateX(0);
   transition: transform 460ms var(--ease-in), opacity 240ms linear;
 }
+
+/* --- Glass ----------------------------------------------------------------- */
+
+/* Apple's material is not a tint, it is an edge. The rim catches light along
+   the top and the outer left, the body carries a faint lens gradient, and a
+   hairline inside the border gives the sheet a thickness. Without those three
+   a translucent rectangle just looks like a weak colour. */
+
+:root[data-sheen="1"] .pill::before,
+:root[data-sheen="1"] .panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    /* Specular sweep across the top left, the way a curved sheet catches a
+       light source. */
+    linear-gradient(148deg, rgba(255, 255, 255, 0.30) 0%,
+      rgba(255, 255, 255, 0.08) 20%, rgba(255, 255, 255, 0) 44%),
+    radial-gradient(130% 85% at 10% -6%, rgba(255, 255, 255, 0.26) 0%, transparent 58%),
+    /* A trace of dispersion at the edges: real glass splits light slightly,
+       and its absence is what makes a flat overlay look like plastic. */
+    linear-gradient(115deg, rgba(120, 220, 255, 0.16) 0%, transparent 16%),
+    linear-gradient(295deg, rgba(255, 150, 210, 0.13) 0%, transparent 18%);
+  box-shadow:
+    inset 0 1.2px 0 rgba(255, 255, 255, 0.6),
+    inset 1.2px 0 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1.2px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 22px rgba(255, 255, 255, 0.07);
+  mix-blend-mode: screen;
+}
+
+/* The outer edge needs to read against a bright wallpaper as well as a dark
+   one, so it is drawn twice: a light hairline and a dark one just outside it. */
+:root[data-sheen="1"] .pill,
+:root[data-sheen="1"] .panel {
+  box-shadow:
+    0 0 0 0.5px rgba(255, 255, 255, 0.16),
+    0 18px 50px var(--shadow),
+    inset 0 0 40px rgba(255, 255, 255, 0.04);
+}
+
+:root[data-sheen="1"] .pill { overflow: hidden; }
+:root[data-sheen="1"] .item { position: relative; z-index: 1; }
+:root[data-sheen="1"] .ring-face {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(6px) saturate(140%);
+  -webkit-backdrop-filter: blur(6px) saturate(140%);
+}
+:root[data-sheen="1"] .bar { box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.2); }
+:root[data-sheen="1"] .panel-tail { filter: drop-shadow(0 0 0.5px rgba(255, 255, 255, 0.3)); }
 
 /* --- One ring ------------------------------------------------------------ */
 
@@ -142,7 +207,10 @@ html, body {
   right: calc(var(--pill-w, 92px) + 16px);
   width: 424px;
   background: var(--panel-bg);
-  border-radius: 24px;
+  border-radius: var(--radius-panel, 24px);
+  border: 1px solid var(--border, transparent);
+  backdrop-filter: blur(var(--blur, 0px)) saturate(var(--saturate, 100%));
+  -webkit-backdrop-filter: blur(var(--blur, 0px)) saturate(var(--saturate, 100%));
   padding: 18px 22px 20px;
   box-shadow: 0 26px 60px var(--shadow, rgba(0, 0, 0, 0.5));
   opacity: 0;
@@ -169,12 +237,28 @@ html, body {
   transition: top 320ms var(--ease-in);
 }
 
+.panel-head,
+.panel-rows { position: relative; z-index: 1; }
+
 .panel-head {
   display: flex;
   align-items: center;
   gap: 9px;
   margin-bottom: 15px;
 }
+
+/* A theme may claim the header, the way a title bar belongs to its era. */
+:root[data-header="true"] .panel-head {
+  background: var(--header-bg);
+  color: var(--header-ink);
+  margin: -18px -22px 15px;
+  padding: 9px 16px;
+  border-radius: calc(var(--radius-panel, 24px) - 1px) calc(var(--radius-panel, 24px) - 1px) 0 0;
+}
+:root[data-header="true"] .panel-title,
+:root[data-header="true"] .panel-note,
+:root[data-header="true"] .panel-mark { color: var(--header-ink); }
+:root[data-header="true"] .panel-note { opacity: 0.8; }
 
 .panel-mark { width: 21px; height: 21px; color: var(--ink); display: block; }
 .panel-mark svg { width: 100%; height: 100%; }

@@ -59,13 +59,30 @@ test('a light theme uses dark ink, and a dark theme light ink', () => {
     const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
+  // A translucent theme has no fixed backdrop: what shows through is the
+  // wallpaper. Its opaque ui.bg is the honest stand-in, and it is also what the
+  // settings window actually paints.
+  const surfaceOf = (t) => (t.panel.startsWith('#') ? t.panel : t.ui.bg);
+
   for (const id of THEMES.ids) {
     const t = THEMES.get(id);
     const ink = luminance(t.ink);
-    const surface = luminance(t.panel);
+    const surface = luminance(surfaceOf(t));
     assert.ok(Math.abs(ink - surface) > 0.4,
-      `${id} puts ${t.ink} on ${t.panel}, which would be unreadable`);
+      `${id} puts ${t.ink} on ${surfaceOf(t)}, which would be unreadable`);
     assert.strictEqual(ink > surface, t.dark === true, `${id} has its ink the wrong way round`);
+  }
+});
+
+test('a translucent theme states its material, an opaque one does not', () => {
+  for (const id of THEMES.ids) {
+    const t = THEMES.get(id);
+    const translucent = !t.panel.startsWith('#');
+    if (translucent) {
+      assert.ok(t.blur > 0, `${id} is translucent but declares no blur`);
+      assert.ok(t.border && t.border !== 'transparent',
+        `${id} is translucent with no rim, which reads as a flat wash`);
+    }
   }
 });
 

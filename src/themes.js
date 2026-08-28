@@ -83,6 +83,62 @@
       track: 'rgba(42, 33, 24, 0.11)', shadow: 'rgba(80, 60, 30, 0.16)',
       ok: '#2F8F63', warm: '#A17700', hot: '#CE5B22', crit: '#BF3A2B',
       ui: { bg: '#F3EADA', sheet: '#FDFAF3', accent: '#CE5B22' }
+    },
+    glass: {
+      name: 'Liquid Glass', dark: true,
+      pill: 'rgba(28, 28, 34, 0.34)', panel: 'rgba(28, 28, 34, 0.40)',
+      face: 'rgba(255, 255, 255, 0.14)', faceHot: 'rgba(255, 255, 255, 0.24)',
+      ink: '#FFFFFF', inkDim: 'rgba(255, 255, 255, 0.66)',
+      track: 'rgba(255, 255, 255, 0.2)', shadow: 'rgba(0, 0, 0, 0.3)',
+      ok: '#5BE7A9', warm: '#FFE34D', hot: '#FF8A4C', crit: '#FF5A5A',
+      // Apple's material is blur plus saturation plus a lit rim: without the
+      // rim it reads as a grey sheet, and without the saturation the colours
+      // behind it go flat.
+      blur: 34, saturate: 190, sheen: true,
+      border: 'rgba(255, 255, 255, 0.46)',
+      radiusPill: 30, radiusPanel: 26,
+      ui: { bg: '#1B1B20', sheet: '#26262D', accent: '#7DD3FC' }
+    },
+
+    winxp: {
+      name: 'Windows XP', dark: false,
+      pill: '#ECE9D8', panel: '#ECE9D8', face: '#FFFFFF', faceHot: '#E3EFFB',
+      ink: '#0B0B0B', inkDim: 'rgba(11, 11, 11, 0.55)',
+      track: 'rgba(11, 11, 11, 0.14)', shadow: 'rgba(10, 36, 106, 0.28)',
+      ok: '#3F9C35', warm: '#C9A227', hot: '#E07B18', crit: '#C4302B',
+      border: '#0A246A', radiusPill: 8, radiusPanel: 8,
+      font: 'Tahoma, Verdana, "DejaVu Sans", sans-serif',
+      // Luna without its blue title bar is just a beige box.
+      header: {
+        bg: 'linear-gradient(180deg, #4C93E8 0%, #2266D4 8%, #0A3EAF 46%, #0A2E8C 100%)',
+        ink: '#FFFFFF'
+      },
+      ui: { bg: '#D6E5F5', sheet: '#ECE9D8', accent: '#245EDC' }
+    },
+
+    win11: {
+      name: 'Windows 11', dark: true,
+      pill: 'rgba(32, 32, 32, 0.86)', panel: 'rgba(32, 32, 32, 0.9)',
+      face: '#2D2D2D', faceHot: '#3A3A3A',
+      ink: '#FFFFFF', inkDim: 'rgba(255, 255, 255, 0.55)',
+      track: 'rgba(255, 255, 255, 0.12)', shadow: 'rgba(0, 0, 0, 0.44)',
+      ok: '#6CCB5F', warm: '#FCE100', hot: '#FF8C00', crit: '#E81123',
+      blur: 20, saturate: 120,
+      border: 'rgba(255, 255, 255, 0.09)', radiusPill: 8, radiusPanel: 8,
+      font: '"Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif',
+      ui: { bg: '#202020', sheet: '#2B2B2B', accent: '#0078D4' }
+    },
+
+    ubuntu: {
+      name: 'Ubuntu', dark: true,
+      pill: '#2C001E', panel: '#380024', face: '#4A0F33', faceHot: '#5C1742',
+      ink: '#FFFFFF', inkDim: 'rgba(255, 255, 255, 0.58)',
+      track: 'rgba(255, 255, 255, 0.14)', shadow: 'rgba(20, 0, 14, 0.5)',
+      ok: '#0E8420', warm: '#F99B11', hot: '#E95420', crit: '#C7162B',
+      border: 'rgba(233, 84, 32, 0.35)', radiusPill: 10, radiusPanel: 10,
+      font: 'Ubuntu, "Ubuntu Sans", Cantarell, system-ui, sans-serif',
+      header: { bg: 'linear-gradient(180deg, #77216F 0%, #5E2750 100%)', ink: '#FFFFFF' },
+      ui: { bg: '#2C001E', sheet: '#3B0028', accent: '#E95420' }
     }
   };
 
@@ -109,7 +165,18 @@
       '--ok': t.ok,
       '--warm': t.warm,
       '--hot': t.hot,
-      '--crit': t.crit
+      '--crit': t.crit,
+      // Optional material properties. Absent means "behave like a flat theme",
+      // which is why each one has a neutral default rather than being skipped.
+      '--blur': t.blur ? `${t.blur}px` : '0px',
+      '--saturate': t.saturate ? `${t.saturate}%` : '100%',
+      '--border': t.border || 'transparent',
+      '--radius-pill': `${t.radiusPill || 32}px`,
+      '--radius-panel': `${t.radiusPanel || 24}px`,
+      '--sheen': t.sheen ? '1' : '0',
+      '--font': t.font || 'inherit',
+      '--header-bg': (t.header && t.header.bg) || 'transparent',
+      '--header-ink': (t.header && t.header.ink) || 'var(--ink)'
     };
   }
 
