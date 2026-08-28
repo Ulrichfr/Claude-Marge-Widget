@@ -3,9 +3,10 @@
    the data, and the cursor position. Everything else, hover hit-testing
    included, is decided here. */
 
-// Language follows the system, English otherwise. See src/i18n.js.
-const LOCALE = navigator.language || 'en';
-const T = I18N.pick(LOCALE);
+// Language follows the setting, then the system, English otherwise.
+// The main process sends the effective locale with the layout.
+let LOCALE = navigator.language || 'en';
+let T = I18N.pick(LOCALE);
 
 const stage = document.getElementById('stage');
 const pill = document.getElementById('pill');
@@ -288,7 +289,12 @@ function refreshResetLabels() {
 
 // --- Wiring ------------------------------------------------------------------
 
-window.widget.onGeometry((g) => { geo = { ...geo, ...g }; applyGeometry(); render(); });
+window.widget.onGeometry((g) => {
+  geo = { ...geo, ...g };
+  if (g.locale) { LOCALE = g.locale; T = I18N.pick(g.locale); }
+  applyGeometry();
+  render();
+});
 window.widget.onUsage((d) => { data = d; hotIndex = -1; render(); setHot(0); });
 window.widget.onReveal(reveal);
 window.widget.onCursor(onCursor);

@@ -1,8 +1,12 @@
 'use strict';
-/* Every user-facing string, in one place, shared by the window and the tray
-   menu so the two can never drift apart.
-   Detection is automatic from the system locale; English is the fallback.
-   Adding a language means adding one object below, nothing else. */
+/* Every user-facing string, in one place, shared by the widget, the tray menu
+   and the settings window, so they can never drift apart.
+   Detection is automatic from the system locale; English is the fallback, and
+   the settings window can pin a language explicitly.
+   Adding a language means adding one object below, nothing else.
+
+   Generated shape, edited by hand: keep the keys identical across languages,
+   `npm test` checks that they are. */
 
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -12,8 +16,6 @@
   const STRINGS = {
     en: {
       panelTitle: 'Claude Marge',
-      notifyTitle: (level) => `Claude usage at ${level}%`,
-      notifyBody: (name, percent) => `${name} is at ${percent}% of its limit.`,
       session: 'Current session',
       allModels: 'All models',
       modelWeek: (m) => `${m}, this week`,
@@ -26,6 +28,8 @@
       hours: (h, m) => (m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`),
       minutes: (m) => `${m} min`,
       stale: (t) => `Last read at ${t}`,
+      notifyTitle: (level) => `Claude usage at ${level}%`,
+      notifyBody: (name, percent) => `${name} is at ${percent}% of its limit.`,
       errors: {
         loading: 'Reading your usage.',
         'no-credentials': 'No Claude session on this machine. Run <b>claude</b> once and sign in.',
@@ -36,16 +40,54 @@
         server: 'Anthropic answered with an error. Retrying.',
         unknown: 'Unknown state.'
       },
-      menu: { refresh: 'Refresh now', peek: 'Show for 3 seconds', open: 'Open configuration',
-        reload: 'Reload configuration', quit: 'Quit',
-        startAtLogin: 'Start at login', restartNow: 'Restart the widget',
-        pin: 'Keep visible' }
+      menu: {
+        refresh: 'Refresh now',
+        peek: 'Show for 3 seconds',
+        open: 'Settings…',
+        reveal: 'Reveal the config file',
+        startAtLogin: 'Start at login',
+        restartNow: 'Restart the widget',
+        pin: 'Keep visible',
+        quit: 'Quit'
+      },
+      settings: {
+        title: 'Settings',
+        subtitle: 'Claude Marge Widget',
+        placement: 'Placement',
+        vertical: 'Vertical position',
+        verticalHint: 'Where the pill sits along the right edge.',
+        top: 'Top',
+        bottom: 'Bottom',
+        follow: 'Follow the mouse across displays',
+        followHint: 'The widget appears on whichever screen holds the pointer.',
+        data: 'Data',
+        interval: 'Check every',
+        intervalHint: 'Asking too often gets you rate limited. Two minutes is plenty.',
+        alerts: 'Alerts',
+        alertsOn: 'Warn before the ceiling',
+        alertsHint: 'One notification per level, per quota, per reset window.',
+        thresholds: 'Thresholds',
+        system: 'System',
+        shortcut: 'Keep visible shortcut',
+        shortcutHint: 'Click, then press the combination. Backspace clears it.',
+        shortcutEmpty: 'No shortcut',
+        recording: 'Press a combination…',
+        language: 'Language',
+        auto: 'Automatic',
+        startAtLogin: 'Start at login',
+        save: 'Save',
+        saved: 'Saved',
+        reset: 'Reset to defaults',
+        reveal: 'Reveal the config file',
+        minutes: 'min',
+        file: 'Configuration file',
+        revealShort: 'Reveal',
+        close: 'Close'
+      }
     },
 
     fr: {
       panelTitle: 'Claude Marge',
-      notifyTitle: (level) => `Consommation Claude à ${level} %`,
-      notifyBody: (name, percent) => `${name} est à ${percent} % de sa limite.`,
       session: 'Session en cours',
       allModels: 'Tous modèles',
       modelWeek: (m) => `${m}, cette semaine`,
@@ -54,10 +96,12 @@
       resetIn: (t) => `Reset dans ${t}`,
       resetAt: (d, t) => `Reset ${d} ${t}`,
       resetNow: 'Reset imminent',
-      today: "aujourd'hui",
+      today: 'aujourd\'hui',
       hours: (h, m) => (m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`),
       minutes: (m) => `${m} min`,
       stale: (t) => `Dernière lecture à ${t}`,
+      notifyTitle: (level) => `Consommation Claude à ${level} %`,
+      notifyBody: (name, percent) => `${name} est à ${percent} % de sa limite.`,
       errors: {
         loading: 'Lecture de la consommation en cours.',
         'no-credentials': 'Aucune session Claude sur cette machine. Lance <b>claude</b> une fois pour te connecter.',
@@ -68,16 +112,54 @@
         server: 'Anthropic a répondu par une erreur. Nouvel essai.',
         unknown: 'État inconnu.'
       },
-      menu: { refresh: 'Rafraîchir maintenant', peek: 'Afficher 3 secondes',
-        open: 'Ouvrir la configuration', reload: 'Recharger la configuration', quit: 'Quitter',
-        startAtLogin: 'Lancer au démarrage', restartNow: 'Relancer le widget',
-        pin: 'Garder visible' }
+      menu: {
+        refresh: 'Rafraîchir maintenant',
+        peek: 'Afficher 3 secondes',
+        open: 'Réglages…',
+        reveal: 'Montrer le fichier de configuration',
+        startAtLogin: 'Lancer au démarrage',
+        restartNow: 'Relancer le widget',
+        pin: 'Garder visible',
+        quit: 'Quitter'
+      },
+      settings: {
+        title: 'Réglages',
+        subtitle: 'Claude Marge Widget',
+        placement: 'Placement',
+        vertical: 'Position verticale',
+        verticalHint: 'Où se pose la pilule le long du bord droit.',
+        top: 'Haut',
+        bottom: 'Bas',
+        follow: 'Suivre la souris d\'un écran à l\'autre',
+        followHint: 'Le widget apparaît sur l\'écran où se trouve le pointeur.',
+        data: 'Données',
+        interval: 'Vérifier toutes les',
+        intervalHint: 'Interroger trop souvent vaut un refus. Deux minutes suffisent largement.',
+        alerts: 'Alertes',
+        alertsOn: 'Prévenir avant le plafond',
+        alertsHint: 'Une notification par seuil, par quota et par fenêtre de reset.',
+        thresholds: 'Seuils',
+        system: 'Système',
+        shortcut: 'Raccourci « Garder visible »',
+        shortcutHint: 'Clique, puis tape la combinaison. Retour arrière l\'efface.',
+        shortcutEmpty: 'Aucun raccourci',
+        recording: 'Tape une combinaison…',
+        language: 'Langue',
+        auto: 'Automatique',
+        startAtLogin: 'Lancer au démarrage',
+        save: 'Enregistrer',
+        saved: 'Enregistré',
+        reset: 'Valeurs par défaut',
+        reveal: 'Montrer le fichier de configuration',
+        minutes: 'min',
+        file: 'Fichier de configuration',
+        revealShort: 'Montrer',
+        close: 'Fermer'
+      }
     },
 
     es: {
       panelTitle: 'Claude Marge',
-      notifyTitle: (level) => `Consumo de Claude al ${level} %`,
-      notifyBody: (name, percent) => `${name} está al ${percent} % de su límite.`,
       session: 'Sesión actual',
       allModels: 'Todos los modelos',
       modelWeek: (m) => `${m}, esta semana`,
@@ -90,6 +172,8 @@
       hours: (h, m) => (m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`),
       minutes: (m) => `${m} min`,
       stale: (t) => `Última lectura a las ${t}`,
+      notifyTitle: (level) => `Consumo de Claude al ${level} %`,
+      notifyBody: (name, percent) => `${name} está al ${percent} % de su límite.`,
       errors: {
         loading: 'Leyendo tu consumo.',
         'no-credentials': 'No hay sesión de Claude en este equipo. Ejecuta <b>claude</b> una vez e inicia sesión.',
@@ -100,16 +184,54 @@
         server: 'Anthropic respondió con un error. Reintentando.',
         unknown: 'Estado desconocido.'
       },
-      menu: { refresh: 'Actualizar ahora', peek: 'Mostrar 3 segundos',
-        open: 'Abrir la configuración', reload: 'Recargar la configuración', quit: 'Salir',
-        startAtLogin: 'Iniciar al arrancar', restartNow: 'Reiniciar el widget',
-        pin: 'Mantener visible' }
+      menu: {
+        refresh: 'Actualizar ahora',
+        peek: 'Mostrar 3 segundos',
+        open: 'Ajustes…',
+        reveal: 'Mostrar el archivo de configuración',
+        startAtLogin: 'Iniciar al arrancar',
+        restartNow: 'Reiniciar el widget',
+        pin: 'Mantener visible',
+        quit: 'Salir'
+      },
+      settings: {
+        title: 'Ajustes',
+        subtitle: 'Claude Marge Widget',
+        placement: 'Colocación',
+        vertical: 'Posición vertical',
+        verticalHint: 'Dónde se sitúa la píldora en el borde derecho.',
+        top: 'Arriba',
+        bottom: 'Abajo',
+        follow: 'Seguir el ratón entre pantallas',
+        followHint: 'El widget aparece en la pantalla donde está el puntero.',
+        data: 'Datos',
+        interval: 'Comprobar cada',
+        intervalHint: 'Preguntar demasiado acaba en un rechazo. Dos minutos bastan.',
+        alerts: 'Alertas',
+        alertsOn: 'Avisar antes del límite',
+        alertsHint: 'Una notificación por nivel, por cuota y por ventana de reinicio.',
+        thresholds: 'Umbrales',
+        system: 'Sistema',
+        shortcut: 'Atajo para mantener visible',
+        shortcutHint: 'Haz clic y pulsa la combinación. Retroceso la borra.',
+        shortcutEmpty: 'Sin atajo',
+        recording: 'Pulsa una combinación…',
+        language: 'Idioma',
+        auto: 'Automático',
+        startAtLogin: 'Iniciar al arrancar',
+        save: 'Guardar',
+        saved: 'Guardado',
+        reset: 'Valores por defecto',
+        reveal: 'Mostrar el archivo de configuración',
+        minutes: 'min',
+        file: 'Archivo de configuración',
+        revealShort: 'Mostrar',
+        close: 'Cerrar'
+      }
     },
 
     de: {
       panelTitle: 'Claude Marge',
-      notifyTitle: (level) => `Claude-Verbrauch bei ${level} %`,
-      notifyBody: (name, percent) => `${name} liegt bei ${percent} % des Limits.`,
       session: 'Aktuelle Sitzung',
       allModels: 'Alle Modelle',
       modelWeek: (m) => `${m}, diese Woche`,
@@ -122,6 +244,8 @@
       hours: (h, m) => (m ? `${h} Std ${String(m).padStart(2, '0')}` : `${h} Std`),
       minutes: (m) => `${m} Min`,
       stale: (t) => `Zuletzt gelesen um ${t}`,
+      notifyTitle: (level) => `Claude-Verbrauch bei ${level} %`,
+      notifyBody: (name, percent) => `${name} liegt bei ${percent} % des Limits.`,
       errors: {
         loading: 'Verbrauch wird gelesen.',
         'no-credentials': 'Keine Claude-Sitzung auf diesem Rechner. Starte <b>claude</b> einmal und melde dich an.',
@@ -132,16 +256,54 @@
         server: 'Anthropic hat mit einem Fehler geantwortet. Neuer Versuch.',
         unknown: 'Unbekannter Zustand.'
       },
-      menu: { refresh: 'Jetzt aktualisieren', peek: '3 Sekunden anzeigen',
-        open: 'Konfiguration öffnen', reload: 'Konfiguration neu laden', quit: 'Beenden',
-        startAtLogin: 'Beim Anmelden starten', restartNow: 'Widget neu starten',
-        pin: 'Sichtbar lassen' }
+      menu: {
+        refresh: 'Jetzt aktualisieren',
+        peek: '3 Sekunden anzeigen',
+        open: 'Einstellungen…',
+        reveal: 'Konfigurationsdatei anzeigen',
+        startAtLogin: 'Beim Anmelden starten',
+        restartNow: 'Widget neu starten',
+        pin: 'Sichtbar lassen',
+        quit: 'Beenden'
+      },
+      settings: {
+        title: 'Einstellungen',
+        subtitle: 'Claude Marge Widget',
+        placement: 'Platzierung',
+        vertical: 'Vertikale Position',
+        verticalHint: 'Wo die Pille am rechten Rand sitzt.',
+        top: 'Oben',
+        bottom: 'Unten',
+        follow: 'Der Maus über Bildschirme folgen',
+        followHint: 'Das Widget erscheint auf dem Bildschirm mit dem Zeiger.',
+        data: 'Daten',
+        interval: 'Prüfen alle',
+        intervalHint: 'Zu häufiges Fragen führt zur Drosselung. Zwei Minuten reichen.',
+        alerts: 'Warnungen',
+        alertsOn: 'Vor dem Limit warnen',
+        alertsHint: 'Eine Meldung pro Stufe, pro Kontingent, pro Zurücksetzung.',
+        thresholds: 'Schwellen',
+        system: 'System',
+        shortcut: 'Kurzbefehl für Sichtbar lassen',
+        shortcutHint: 'Klicken, dann die Kombination drücken. Rücktaste löscht sie.',
+        shortcutEmpty: 'Kein Kurzbefehl',
+        recording: 'Kombination drücken…',
+        language: 'Sprache',
+        auto: 'Automatisch',
+        startAtLogin: 'Beim Anmelden starten',
+        save: 'Sichern',
+        saved: 'Gesichert',
+        reset: 'Standardwerte',
+        reveal: 'Konfigurationsdatei anzeigen',
+        minutes: 'Min',
+        file: 'Konfigurationsdatei',
+        revealShort: 'Anzeigen',
+        close: 'Schließen'
+      }
     },
 
     it: {
       panelTitle: 'Claude Marge',
-      notifyTitle: (level) => `Consumo Claude al ${level} %`,
-      notifyBody: (name, percent) => `${name} è al ${percent} % del limite.`,
       session: 'Sessione corrente',
       allModels: 'Tutti i modelli',
       modelWeek: (m) => `${m}, questa settimana`,
@@ -154,26 +316,66 @@
       hours: (h, m) => (m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`),
       minutes: (m) => `${m} min`,
       stale: (t) => `Ultima lettura alle ${t}`,
+      notifyTitle: (level) => `Consumo Claude al ${level} %`,
+      notifyBody: (name, percent) => `${name} è al ${percent} % del limite.`,
       errors: {
         loading: 'Lettura del consumo in corso.',
         'no-credentials': 'Nessuna sessione Claude su questa macchina. Avvia <b>claude</b> una volta e accedi.',
         'token-expired': 'Il token Claude è scaduto. Apri Claude Code una volta, si rinnova da solo.',
-        unauthorized: "L'account ha rifiutato la lettura del consumo.",
+        unauthorized: 'L\'account ha rifiutato la lettura del consumo.',
         network: 'Impossibile raggiungere api.anthropic.com.',
         'rate-limited': 'Troppe richieste. Il widget rallenta.',
         server: 'Anthropic ha risposto con un errore. Nuovo tentativo.',
         unknown: 'Stato sconosciuto.'
       },
-      menu: { refresh: 'Aggiorna ora', peek: 'Mostra per 3 secondi',
-        open: 'Apri la configurazione', reload: 'Ricarica la configurazione', quit: 'Esci',
-        startAtLogin: "Avvia all'accesso", restartNow: 'Riavvia il widget',
-        pin: 'Mantieni visibile' }
+      menu: {
+        refresh: 'Aggiorna ora',
+        peek: 'Mostra per 3 secondi',
+        open: 'Impostazioni…',
+        reveal: 'Mostra il file di configurazione',
+        startAtLogin: 'Avvia all\'accesso',
+        restartNow: 'Riavvia il widget',
+        pin: 'Mantieni visibile',
+        quit: 'Esci'
+      },
+      settings: {
+        title: 'Impostazioni',
+        subtitle: 'Claude Marge Widget',
+        placement: 'Posizionamento',
+        vertical: 'Posizione verticale',
+        verticalHint: 'Dove si posa la pillola lungo il bordo destro.',
+        top: 'Alto',
+        bottom: 'Basso',
+        follow: 'Segui il mouse tra gli schermi',
+        followHint: 'Il widget appare sullo schermo dove si trova il puntatore.',
+        data: 'Dati',
+        interval: 'Controlla ogni',
+        intervalHint: 'Chiedere troppo spesso porta a un rifiuto. Due minuti bastano.',
+        alerts: 'Avvisi',
+        alertsOn: 'Avvisa prima del limite',
+        alertsHint: 'Una notifica per livello, per quota, per finestra di azzeramento.',
+        thresholds: 'Soglie',
+        system: 'Sistema',
+        shortcut: 'Scorciatoia Mantieni visibile',
+        shortcutHint: 'Clicca, poi premi la combinazione. Backspace la cancella.',
+        shortcutEmpty: 'Nessuna scorciatoia',
+        recording: 'Premi una combinazione…',
+        language: 'Lingua',
+        auto: 'Automatico',
+        startAtLogin: 'Avvia all\'accesso',
+        save: 'Salva',
+        saved: 'Salvato',
+        reset: 'Valori predefiniti',
+        reveal: 'Mostra il file di configurazione',
+        minutes: 'min',
+        file: 'File di configurazione',
+        revealShort: 'Mostra',
+        close: 'Chiudi'
+      }
     },
 
     zh: {
       panelTitle: 'Claude Marge',
-      notifyTitle: (level) => `Claude 用量已达 ${level}%`,
-      notifyBody: (name, percent) => `${name} 已用至上限的 ${percent}%。`,
       session: '当前会话',
       allModels: '所有模型',
       modelWeek: (m) => `${m}，本周`,
@@ -183,9 +385,11 @@
       resetAt: (d, t) => `${d} ${t} 重置`,
       resetNow: '正在重置',
       today: '今天',
-      hours: (h, m) => (m ? `${h} 小时 ${m} 分` : `${h} 小时`),
+      hours: (h, m) => (m ? `${h} 小时 ${String(m).padStart(2, '0')} 分` : `${h} 小时`),
       minutes: (m) => `${m} 分钟`,
       stale: (t) => `上次读取 ${t}`,
+      notifyTitle: (level) => `Claude 用量已达 ${level}%`,
+      notifyBody: (name, percent) => `${name} 已用至上限的 ${percent}%。`,
       errors: {
         loading: '正在读取用量。',
         'no-credentials': '此设备上没有 Claude 会话。请运行一次 <b>claude</b> 并登录。',
@@ -196,16 +400,54 @@
         server: 'Anthropic 返回了错误，正在重试。',
         unknown: '状态未知。'
       },
-      menu: { refresh: '立即刷新', peek: '显示 3 秒', open: '打开配置',
-        reload: '重新加载配置', quit: '退出',
-        startAtLogin: '登录时启动', restartNow: '重启小组件',
-        pin: '保持显示' }
+      menu: {
+        refresh: '立即刷新',
+        peek: '显示 3 秒',
+        open: '设置…',
+        reveal: '显示配置文件',
+        startAtLogin: '登录时启动',
+        restartNow: '重启小组件',
+        pin: '保持显示',
+        quit: '退出'
+      },
+      settings: {
+        title: '设置',
+        subtitle: 'Claude Marge Widget',
+        placement: '位置',
+        vertical: '垂直位置',
+        verticalHint: '胶囊在右边缘的高度。',
+        top: '顶部',
+        bottom: '底部',
+        follow: '跟随鼠标切换显示器',
+        followHint: '小组件出现在指针所在的屏幕上。',
+        data: '数据',
+        interval: '检查间隔',
+        intervalHint: '查询过于频繁会被限流。两分钟足够了。',
+        alerts: '提醒',
+        alertsOn: '接近上限前提醒',
+        alertsHint: '每个档位、每项配额、每个重置周期只提醒一次。',
+        thresholds: '阈值',
+        system: '系统',
+        shortcut: '保持显示快捷键',
+        shortcutHint: '点击后按下组合键，退格键清除。',
+        shortcutEmpty: '无快捷键',
+        recording: '请按组合键…',
+        language: '语言',
+        auto: '自动',
+        startAtLogin: '登录时启动',
+        save: '保存',
+        saved: '已保存',
+        reset: '恢复默认',
+        reveal: '显示配置文件',
+        minutes: '分钟',
+        file: '配置文件',
+        revealShort: '显示',
+        close: '关闭'
+      }
     },
 
     ja: {
       panelTitle: 'Claude Marge',
-      notifyTitle: (level) => `Claude の使用量が ${level}%`,
-      notifyBody: (name, percent) => `${name} は上限の ${percent}% です。`,
       session: '現在のセッション',
       allModels: 'すべてのモデル',
       modelWeek: (m) => `${m}、今週`,
@@ -215,9 +457,11 @@
       resetAt: (d, t) => `${d} ${t} にリセット`,
       resetNow: 'リセット中',
       today: '今日',
-      hours: (h, m) => (m ? `${h} 時間 ${m} 分` : `${h} 時間`),
+      hours: (h, m) => (m ? `${h} 時間 ${String(m).padStart(2, '0')} 分` : `${h} 時間`),
       minutes: (m) => `${m} 分`,
       stale: (t) => `最終取得 ${t}`,
+      notifyTitle: (level) => `Claude の使用量が ${level}%`,
+      notifyBody: (name, percent) => `${name} は上限の ${percent}% です。`,
       errors: {
         loading: '使用量を読み込んでいます。',
         'no-credentials': 'このマシンに Claude のセッションがありません。<b>claude</b> を一度実行してサインインしてください。',
@@ -228,18 +472,57 @@
         server: 'Anthropic がエラーを返しました。再試行します。',
         unknown: '不明な状態です。'
       },
-      menu: { refresh: '今すぐ更新', peek: '3 秒間表示', open: '設定を開く',
-        reload: '設定を再読み込み', quit: '終了',
-        startAtLogin: 'ログイン時に起動', restartNow: 'ウィジェットを再起動',
-        pin: '表示したままにする' }
+      menu: {
+        refresh: '今すぐ更新',
+        peek: '3 秒間表示',
+        open: '設定…',
+        reveal: '設定ファイルを表示',
+        startAtLogin: 'ログイン時に起動',
+        restartNow: 'ウィジェットを再起動',
+        pin: '表示したままにする',
+        quit: '終了'
+      },
+      settings: {
+        title: '設定',
+        subtitle: 'Claude Marge Widget',
+        placement: '配置',
+        vertical: '垂直位置',
+        verticalHint: '右端のどの高さに置くか。',
+        top: '上',
+        bottom: '下',
+        follow: 'マウスのある画面に追従',
+        followHint: 'ポインターのある画面にウィジェットが出ます。',
+        data: 'データ',
+        interval: '確認する間隔',
+        intervalHint: '頻繁に問い合わせると制限されます。2 分で十分です。',
+        alerts: '通知',
+        alertsOn: '上限の前に知らせる',
+        alertsHint: 'レベルごと、枠ごと、リセット周期ごとに 1 回だけ。',
+        thresholds: 'しきい値',
+        system: 'システム',
+        shortcut: '表示したままにするのショートカット',
+        shortcutHint: 'クリックしてから組み合わせを押します。Backspace で消去。',
+        shortcutEmpty: 'ショートカットなし',
+        recording: '組み合わせを押してください…',
+        language: '言語',
+        auto: '自動',
+        startAtLogin: 'ログイン時に起動',
+        save: '保存',
+        saved: '保存しました',
+        reset: '初期値に戻す',
+        reveal: '設定ファイルを表示',
+        minutes: '分',
+        file: '設定ファイル',
+        revealShort: '表示',
+        close: '閉じる'
+      }
     }
   };
 
   /** Pick a language from a BCP 47 tag such as "fr-CA" or "zh-Hans-CN". */
   function pick(locale) {
     const tag = String(locale || 'en').toLowerCase();
-    const base = tag.split(/[-_]/)[0];
-    return STRINGS[base] || STRINGS.en;
+    return STRINGS[tag.split(/[-_]/)[0]] || STRINGS.en;
   }
 
   return { STRINGS, pick, languages: Object.keys(STRINGS) };

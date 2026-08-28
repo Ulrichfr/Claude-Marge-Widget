@@ -150,6 +150,25 @@ menu.
 once per level, per quota, per reset window, so a limit you are sitting above
 does not notify you every two minutes. Set it to `[]` to stay silent.
 `shortcut` toggles the pinned view; set it to `""` to register nothing.
+`language` is `auto`, or one of `en`, `fr`, `es`, `de`, `it`, `zh`, `ja`.
+
+### Settings
+
+<img src="docs/settings.png" alt="The settings window: placement, data, alerts and system sections" width="420" align="right">
+
+Everything is in the tray menu, under **Settings**. Placement along the right
+edge, how often to check, which thresholds should warn you, the keep-visible
+shortcut, the language, and start at login.
+
+Changes apply the moment you save: no restart to see a slider move. The window
+writes the same `config.json` you can still edit by hand, and **Reveal** opens
+it.
+
+The shortcut field records a real combination. Click it, press the keys, and
+Backspace clears it. A bare letter is refused, since it would fire while you
+type anywhere else.
+
+<br clear="all">
 
 ### The tray menu
 
@@ -160,8 +179,8 @@ does not notify you every two minutes. Set it to `[]` to stay silent.
 | **Start at login** | Checkbox. Turning it off leaves the running widget alone, it simply will not come back at your next login. |
 | **Keep visible** | Pin the widget open, no hovering. Also on a global shortcut, `Cmd/Ctrl+Shift+M` by default. |
 | **Restart the widget** | Relaunch through the supervisor, handy after a config change. |
-| Open configuration | Reveal `config.json` in the file manager. |
-| Reload configuration | Apply the file without restarting. |
+| Settings… | Open the settings window. |
+| Reveal the config file | Open `config.json` in your editor. |
 | Quit | Really quits. The login item restarts the widget after a crash, never after a deliberate quit. |
 
 Closed it and want it back? `launchctl kickstart gui/$(id -u)/com.claudemarge.widget`

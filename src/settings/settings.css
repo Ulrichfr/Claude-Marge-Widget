@@ -1,0 +1,300 @@
+/* Settings window. Same ink as the widget: a black sheet, one accent, and
+   nothing that moves unless you touched it. Controls are built from scratch
+   because the native ones would drag a second visual language in. */
+
+:root {
+  --bg: #0A0A0B;
+  --sheet: #111113;
+  --line: rgba(255, 255, 255, 0.07);
+  --ink: #F5F5F6;
+  --ink-2: rgba(245, 245, 246, 0.56);
+  --ink-3: rgba(245, 245, 246, 0.34);
+  --accent: #FF5B2B;
+  --ok: #34D399;
+  --field: rgba(255, 255, 255, 0.06);
+  --field-hi: rgba(255, 255, 255, 0.11);
+  --ease: cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  font-family: -apple-system, "SF Pro Text", "Inter", "Segoe UI Variable",
+    system-ui, "Cantarell", "PingFang SC", "Hiragino Sans",
+    "Noto Sans CJK SC", "Noto Sans CJK JP", sans-serif;
+  font-size: 13px;
+}
+
+body { display: flex; flex-direction: column; }
+
+/* --- Header ---------------------------------------------------------------- */
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 22px 24px 14px;
+  -webkit-app-region: drag;
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(255, 91, 43, 0.16) 0%, transparent 62%),
+    var(--bg);
+}
+
+.mark { width: 30px; height: 30px; color: var(--ink); flex: 0 0 auto; }
+.mark svg { width: 100%; height: 100%; display: block; }
+
+.head h1 { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+.head p { font-size: 12px; color: var(--ink-3); margin-top: 2px; letter-spacing: 0.01em; }
+
+/* --- Sheet ----------------------------------------------------------------- */
+
+.sheet {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 20px 16px;
+  /* A soft edge at the bottom says there is more below, without a scrollbar
+     having to say it. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent 100%);
+}
+.sheet::-webkit-scrollbar { width: 10px; }
+.sheet::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  border: 3px solid var(--bg);
+}
+
+.group {
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 4px 16px;
+  margin-bottom: 12px;
+}
+
+.group h2 {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 13px 0 9px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.group h2 + .row { border-top: none; padding-top: 2px; }
+.row.stack { flex-direction: column; align-items: stretch; gap: 12px; }
+
+.row-label { flex: 1; min-width: 0; }
+.row-label span { display: block; font-size: 13.5px; letter-spacing: -0.01em; }
+.row-label em {
+  display: block;
+  margin-top: 3px;
+  font-style: normal;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+/* --- Switch ---------------------------------------------------------------- */
+
+.switch {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  background: var(--field);
+  position: relative;
+  cursor: pointer;
+  transition: background 220ms var(--ease);
+}
+.switch i {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 240ms var(--ease);
+}
+.switch[aria-checked="true"] { background: var(--ok); }
+.switch[aria-checked="true"] i { transform: translateX(18px); }
+.switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* --- Slider ---------------------------------------------------------------- */
+
+.slider input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--field);
+  outline: none;
+}
+.slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 160ms var(--ease);
+}
+.slider input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.15); cursor: grabbing; }
+.scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* --- Segmented ------------------------------------------------------------- */
+
+.segmented {
+  display: flex;
+  gap: 4px;
+  background: var(--field);
+  border-radius: 11px;
+  padding: 4px;
+}
+.segmented button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 7px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 180ms var(--ease), color 180ms var(--ease);
+}
+.segmented button:hover { color: var(--ink); }
+.segmented button[aria-pressed="true"] {
+  background: var(--field-hi);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* --- Chips ----------------------------------------------------------------- */
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chips button {
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  padding: 7px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+}
+.chips button:hover { border-color: rgba(255, 255, 255, 0.18); color: var(--ink); }
+.chips button[aria-pressed="true"] {
+  background: rgba(255, 91, 43, 0.16);
+  border-color: rgba(255, 91, 43, 0.5);
+  color: #FFB79B;
+}
+
+.row.stack.off { opacity: 0.35; pointer-events: none; }
+
+/* --- Keycap and select ------------------------------------------------------ */
+
+.keycap {
+  width: 100%;
+  text-align: center;
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 11px 0;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+}
+.keycap:hover { border-color: rgba(255, 255, 255, 0.2); }
+.keycap.recording {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(255, 91, 43, 0.1);
+}
+.keycap.empty { color: var(--ink-3); }
+
+.select-wrap { position: relative; flex: 0 0 auto; }
+.select-wrap svg {
+  position: absolute;
+  right: 12px; top: 50%;
+  width: 11px; height: 7px;
+  margin-top: -3px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  padding: 9px 34px 9px 13px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+select:hover { border-color: rgba(255, 255, 255, 0.2); }
+
+/* --- Footer ---------------------------------------------------------------- */
+
+.foot button { white-space: nowrap; }
+button.ghost.small { padding: 7px 13px; font-size: 12px; flex: 0 0 auto; }
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.35);
+}
+.spacer { flex: 1; }
+
+.saved {
+  font-size: 12px;
+  color: var(--ok);
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 220ms var(--ease), transform 220ms var(--ease);
+}
+.saved.on { opacity: 1; transform: none; }
+
+button.ghost, button.primary {
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 180ms var(--ease);
+}
+button.ghost { background: transparent; color: var(--ink-2); border-color: var(--line); }
+button.ghost:hover { color: var(--ink); border-color: rgba(255, 255, 255, 0.2); }
+button.primary { background: var(--ink); color: #0A0A0B; font-weight: 550; }
+button.primary:hover { background: #fff; }
+button.primary:active { transform: scale(0.98); }

@@ -38,6 +38,7 @@ const DEFAULTS = {
   verticalAnchor: 0.45,   // 0 = top of the screen, 1 = bottom
   refreshSeconds: 120,
   followCursorDisplay: true, // show up on whichever display holds the cursor
+  language: 'auto',          // 'auto', or one of the codes in src/i18n.js
   alertAt: [80, 95],         // notify once when a quota crosses these marks
   shortcut: 'CommandOrControl+Shift+M' // toggle pinned mode; '' disables it
 };
@@ -64,12 +65,22 @@ function ensureConfigFile() {
   }
 }
 
-async function openConfig() {
+async function revealConfig() {
   if (!ensureConfigFile()) return;
   // openPath hands it to the default editor; if nothing is associated with
   // .json it returns a message, and revealing the folder is the fallback.
   const problem = await shell.openPath(CONFIG_PATH);
   if (problem) shell.showItemInFolder(CONFIG_PATH);
+}
+
+function saveConfig(next) {
+  try {
+    fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(next, null, 2) + '\n');
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 let win = null;
@@ -171,6 +182,7 @@ function sendGeometry() {
     ringLabel: m.label,
     rowGap: m.rowGap,
     pillPadding: m.pillPadding,
+    locale: activeLocale(),
     rows
   });
 }
@@ -348,8 +360,12 @@ function raiseAlerts(gauges) {
 // --- Status bar icon --------------------------------------------------------
 
 // The tray menu speaks the same language as the window.
-const T = I18N.pick(app.getLocale());
-const MENU = T.menu;
+/** The language the user pinned, or the system's. */
+function activeLocale() {
+  return config.language && config.language !== 'auto' ? config.language : app.getLocale();
+}
+let T = I18N.pick(activeLocale());
+let MENU = T.menu;
 const IDLE_LABEL = 'Claude Marge';
 
 /** Rebuilt on every change so the checkbox always shows the real state. */
@@ -376,8 +392,8 @@ function buildMenu() {
     },
     { label: MENU.restartNow, click: () => autostart.restartNow() },
     { type: 'separator' },
-    { label: MENU.open, click: () => openConfig() },
-    { label: MENU.reload, click: () => { config = loadConfig(); placeOn(activeDisplay()); buildMenu(); } },
+    { label: MENU.open, click: () => openSettings() },
+    { label: MENU.reveal, click: () => revealConfig() },
     { type: 'separator' },
     { label: MENU.quit, click: () => { app.isQuitting = true; app.quit(); } }
   ]));
@@ -416,6 +432,65 @@ function registerShortcut() {
   }
 }
 
+// --- Settings window ---------------------------------------------------------
+
+let settingsWin = null;
+
+function openSettings() {
+  if (settingsWin && !settingsWin.isDestroyed()) {
+    settingsWin.show();
+    settingsWin.focus();
+    return;
+  }
+  settingsWin = new BrowserWindow({
+    width: 520,
+    height: 820,
+    resizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    title: T.settings.title,
+    backgroundColor: '#0A0A0B',
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    autoHideMenuBar: true,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'settings-preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+  settingsWin.loadFile(path.join(__dirname, 'settings', 'index.html'));
+  settingsWin.once('ready-to-show', () => settingsWin.show());
+  settingsWin.on('closed', () => { settingsWin = null; });
+}
+
+/**
+ * Apply a saved config without restarting: reposition, re-language, re-bind the
+ * shortcut, and reschedule the next call. Restarting to see a slider move would
+ * be the kind of detail that makes a tool feel cheap.
+ */
+function applyConfig(next) {
+  const before = { shortcut: config.shortcut, language: config.language };
+  config = { ...config, ...next };
+
+  if (typeof next.startAtLogin === 'boolean') autostart.setEnabled(next.startAtLogin);
+
+  if (before.language !== config.language) {
+    T = I18N.pick(activeLocale());
+    MENU = T.menu;
+    sendGeometry();
+  }
+  if (before.shortcut !== config.shortcut) {
+    globalShortcut.unregisterAll();
+    registerShortcut();
+  }
+
+  placeOn(activeDisplay());
+  buildMenu();
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(refresh, nextDelay({ ok: failures === 0 }, failures, config.refreshSeconds));
+}
+
 // --- Lifecycle --------------------------------------------------------------
 
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -448,6 +523,19 @@ app.whenReady().then(() => {
 });
 
 ipcMain.on('request-refresh', () => refresh());
+ipcMain.on('settings:reveal', () => revealConfig());
+ipcMain.handle('settings:load', () => ({ ...config, startAtLogin: autostart.isEnabled() === true }));
+ipcMain.handle('settings:save', (_e, next) => {
+  const { startAtLogin, ...stored } = next || {};
+  saveConfig(stored);
+  applyConfig({ ...stored, startAtLogin });
+  return true;
+});
+ipcMain.handle('settings:reset', () => {
+  saveConfig(DEFAULTS);
+  applyConfig(DEFAULTS);
+  return { ...DEFAULTS, startAtLogin: autostart.isEnabled() === true };
+});
 
 // Control capture: render the window off screen and quit. Used to check the
 // real rendering on a machine with no compositor, or in CI.
@@ -455,7 +543,14 @@ if (process.env.MARGE_CAPTURE) {
   app.whenReady().then(() => {
     setTimeout(async () => {
       try {
-        const image = await win.webContents.capturePage();
+        // MARGE_CAPTURE_SETTINGS shoots the settings window instead.
+        let target = win;
+        if (process.env.MARGE_CAPTURE_SETTINGS) {
+          openSettings();
+          await new Promise((r) => setTimeout(r, 2500));
+          target = settingsWin;
+        }
+        const image = await target.webContents.capturePage();
         fs.writeFileSync(process.env.MARGE_CAPTURE, image.toPNG());
         console.log('capture written:', process.env.MARGE_CAPTURE,
           image.getSize().width + 'x' + image.getSize().height);

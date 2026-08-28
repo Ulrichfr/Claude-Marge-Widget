@@ -7,7 +7,7 @@
     "start": "electron .",
     "demo": "electron . --demo",
     "usage": "node src/usage.js",
-    "test": "node test/geometry.test.js && node test/usage.test.js && node test/schedule.test.js && node test/alerts.test.js && node test/state.test.js",
+    "test": "node test/geometry.test.js && node test/usage.test.js && node test/schedule.test.js && node test/alerts.test.js && node test/state.test.js && node test/i18n.test.js",
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux"
   },

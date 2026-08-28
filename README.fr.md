@@ -156,7 +156,27 @@ d'état :
 une fois par seuil, par quota et par fenêtre de reset, pour qu'une limite que tu
 dépasses déjà ne te prévienne pas toutes les deux minutes. Mets `[]` pour le
 silence complet. `shortcut` bascule l'épinglage ; mets `""` pour n'enregistrer
-aucun raccourci.
+aucun raccourci. `language` vaut `auto`, ou l'un de `en`, `fr`, `es`, `de`,
+`it`, `zh`, `ja`.
+
+### Les réglages
+
+<img src="docs/settings.png" alt="La fenêtre de réglages : placement, données, alertes et système" width="420" align="right">
+
+Tout est dans le menu de la barre d'état, sous **Réglages**. Le placement le
+long du bord droit, la fréquence de vérification, les seuils qui doivent te
+prévenir, le raccourci « Garder visible », la langue, et le lancement au
+démarrage.
+
+Les changements s'appliquent dès l'enregistrement : aucun redémarrage pour voir
+un curseur bouger. La fenêtre écrit le même `config.json` que tu peux toujours
+modifier à la main, et **Montrer** l'ouvre.
+
+Le champ du raccourci enregistre une vraie combinaison. Tu cliques, tu tapes,
+et retour arrière l'efface. Une lettre seule est refusée, elle se déclencherait
+pendant que tu écris ailleurs.
+
+<br clear="all">
 
 ### Le menu de la barre d'état
 
@@ -167,8 +187,8 @@ aucun raccourci.
 | **Lancer au démarrage** | Case à cocher. La décocher laisse tourner le widget en cours, il ne reviendra simplement pas à ta prochaine session. |
 | **Garder visible** | Épingle le widget ouvert, sans survol. Aussi sur un raccourci global, `Cmd/Ctrl+Maj+M` par défaut. |
 | **Relancer le widget** | Redémarre par le superviseur, pratique après un changement de configuration. |
-| Ouvrir la configuration | Montre `config.json` dans le gestionnaire de fichiers. |
-| Recharger la configuration | Applique le fichier sans redémarrer. |
+| Réglages… | Ouvre la fenêtre de réglages. |
+| Montrer le fichier de configuration | Ouvre `config.json` dans ton éditeur. |
 | Quitter | Quitte vraiment. Le démarrage automatique relance après un plantage, jamais après un « Quitter » volontaire. |
 
 Tu l'as fermé et tu le veux de retour ?

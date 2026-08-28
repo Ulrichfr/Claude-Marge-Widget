@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:">
+<title>Claude Marge</title>
+<link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <header class="head" id="head">
+    <span class="mark" id="mark"></span>
+    <div class="head-text">
+      <h1 id="title"></h1>
+      <p id="subtitle"></p>
+    </div>
+  </header>
+
+  <main class="sheet">
+    <section class="group">
+      <h2 id="lblPlacement"></h2>
+
+      <div class="row stack">
+        <div class="row-label">
+          <span id="lblVertical"></span>
+          <em id="hintVertical"></em>
+        </div>
+        <div class="slider">
+          <input type="range" id="vertical" min="0" max="100" step="1">
+          <div class="scale"><span id="lblTop"></span><span id="lblBottom"></span></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-label">
+          <span id="lblFollow"></span>
+          <em id="hintFollow"></em>
+        </div>
+        <button class="switch" id="follow" role="switch"><i></i></button>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2 id="lblData"></h2>
+      <div class="row stack">
+        <div class="row-label">
+          <span id="lblInterval"></span>
+          <em id="hintInterval"></em>
+        </div>
+        <div class="segmented" id="interval"></div>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2 id="lblAlerts"></h2>
+      <div class="row">
+        <div class="row-label">
+          <span id="lblAlertsOn"></span>
+          <em id="hintAlerts"></em>
+        </div>
+        <button class="switch" id="alertsOn" role="switch"><i></i></button>
+      </div>
+      <div class="row stack" id="thresholdRow">
+        <div class="row-label"><span id="lblThresholds"></span></div>
+        <div class="chips" id="thresholds"></div>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2 id="lblSystem"></h2>
+      <div class="row">
+        <div class="row-label"><span id="lblLogin"></span></div>
+        <button class="switch" id="startAtLogin" role="switch"><i></i></button>
+      </div>
+      <div class="row stack">
+        <div class="row-label">
+          <span id="lblShortcut"></span>
+          <em id="hintShortcut"></em>
+        </div>
+        <button class="keycap" id="shortcut"></button>
+      </div>
+      <div class="row">
+        <div class="row-label"><span id="lblLanguage"></span></div>
+        <div class="select-wrap">
+          <select id="language"></select>
+          <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.6 6 6.4l5-4.8" fill="none"
+            stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-label"><span id="lblFile"></span></div>
+        <button class="ghost small" id="reveal"></button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <button class="ghost" id="reset"></button>
+    <span class="spacer"></span>
+    <span class="saved" id="savedFlag"></span>
+    <button class="primary" id="save"></button>
+  </footer>
+
+  <script src="../i18n.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>
