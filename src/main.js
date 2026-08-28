@@ -18,7 +18,7 @@ const fs = require('fs');
 const os = require('os');
 const { fetchUsage } = require('./usage');
 const I18N = require('./i18n');
-const { nextDelay, shouldRefreshOnReveal, adjustFloor } = require('./schedule');
+const { nextDelay, shouldRefreshOnReveal, adjustFloor, initialDelay } = require('./schedule');
 const autostart = require('./autostart');
 const store = require('./state');
 const alerts = require('./alerts');
@@ -405,7 +405,10 @@ async function refresh() {
   updateTrayTitle();
 
   clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(refresh, nextDelay(data, failures, config.refreshSeconds, pacing()));
+  const wait = nextDelay(data, failures, config.refreshSeconds, pacing());
+  // Remembered so a restart cannot skip the wait we just promised.
+  store.save({ nextAllowedAt: data.ok ? 0 : Date.now() + wait });
+  refreshTimer = setTimeout(refresh, wait);
 }
 
 function updateTrayTitle() {
@@ -645,7 +648,15 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) app.dock.hide();
   createWindow();
   createTray();
-  refresh();
+
+  const owed = initialDelay(store.read().nextAllowedAt);
+  if (owed > 0) {
+    trace(`still owed ${Math.round(owed / 1000)}s of backoff from the last run`);
+    refreshTimer = setTimeout(refresh, owed);
+    if (lastGood) sendGeometry();
+  } else {
+    refresh();
+  }
   pollTimer = setInterval(poll, pollRate);
   registerShortcut();
   // Waking from sleep with hours-old numbers is worse than one extra call.

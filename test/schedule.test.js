@@ -3,7 +3,7 @@
    keeps asking at the same pace, which is how a small problem stays. */
 
 const assert = require('assert');
-const { nextDelay, shouldRefreshOnReveal, adjustFloor, MAX_DELAY_MS } = require('../src/schedule');
+const { nextDelay, shouldRefreshOnReveal, adjustFloor, initialDelay, MAX_DELAY_MS } = require('../src/schedule');
 let passed = 0;
 const test = (name, fn) => { fn(); passed++; console.log('  ok  ' + name); };
 
@@ -107,6 +107,16 @@ test('jitter spreads machines apart without ever inverting the order', () => {
   const high = nextDelay({ ok: true }, 0, 120, { jitter: 0.12, random: () => 1 });
   assert.ok(low < 120000 && high > 120000, 'jitter should move the value both ways');
   assert.ok(low >= 105000 && high <= 135000, 'and stay within a tenth of the setting');
+});
+
+
+test('a restart does not skip the wait the last run promised', () => {
+  const now = 1_000_000;
+  assert.strictEqual(initialDelay(now + 240000, now), 240000);
+  assert.strictEqual(initialDelay(now - 5000, now), 0, 'a wait already served is over');
+  assert.strictEqual(initialDelay(undefined, now), 0, 'a first ever start waits for nothing');
+  assert.strictEqual(initialDelay(now + 99 * 60000, now), MAX_DELAY_MS,
+    'a stale timestamp must not strand the widget for an hour');
 });
 
 console.log(`\n${passed} schedule tests passed`);

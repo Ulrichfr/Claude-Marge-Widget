@@ -225,7 +225,13 @@ slowly, and every machine signed into your account asks separately, so two
 laptops at two minutes is already 1440 calls a day. The widget also stops asking
 when the machine sleeps or the screen locks, asks four times less often after
 five idle minutes, and if the account ever refuses, it slows down for good and
-only speeds back up after five clean reads.
+only speeds back up after five clean reads. The wait survives a restart, because
+while an account is refusing, the refusals are themselves requests: a backoff a
+relaunch can skip is not a backoff.
+
+The limit is counted per token, not per account or per network. Two machines
+signed in separately have separate allowances, and one being refused says
+nothing about the other.
 
 **Alerts.** Which marks should warn you before the ceiling. Each one speaks once
 per quota per reset window, so a limit you are already sitting above does not

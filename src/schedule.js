@@ -76,6 +76,19 @@ function adjustFloor(floorSeconds, result, baseSeconds, cleanReads) {
   return floor;
 }
 
+/**
+ * How long to wait before the first call after a start.
+ *
+ * A backoff that a restart resets is not a backoff. Every relaunch would fire
+ * a fresh request, and while an account is refusing, those refusals are
+ * themselves requests: the limit feeds itself. So the wait we promised is
+ * remembered across restarts.
+ */
+function initialDelay(nextAllowedAt, now = Date.now()) {
+  if (!Number.isFinite(nextAllowedAt)) return 0;
+  return Math.min(MAX_DELAY_MS, Math.max(0, nextAllowedAt - now));
+}
+
 /** Should a reveal trigger a fresh call, or is the last read good enough? */
 function shouldRefreshOnReveal(lastGoodAt, failures, now) {
   if (failures > 0) return false;        // already backing off, do not pile on
@@ -84,7 +97,7 @@ function shouldRefreshOnReveal(lastGoodAt, failures, now) {
 }
 
 module.exports = {
-  nextDelay, shouldRefreshOnReveal, adjustFloor,
+  nextDelay, shouldRefreshOnReveal, adjustFloor, initialDelay,
   MIN_SECONDS, MAX_DELAY_MS, MAX_FAILURES, IDLE_AFTER, IDLE_FACTOR,
   FLOOR_CEILING, DECAY_AFTER
 };

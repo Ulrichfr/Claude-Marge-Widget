@@ -238,7 +238,13 @@ de son côté, donc deux portables à deux minutes font déjà 1 440 appels par 
 Le widget cesse aussi d'interroger quand la machine dort ou que l'écran se
 verrouille, espace ses appels quatre fois après cinq minutes d'inactivité, et si
 le compte refuse, il ralentit durablement et ne réaccélère qu'après cinq
-lectures propres.
+lectures propres. L'attente survit à un redémarrage, parce que pendant qu'un
+compte refuse, les refus sont eux-mêmes des requêtes : un ralentissement qu'une
+relance efface n'en est pas un.
+
+Le plafond se compte par jeton, pas par compte ni par réseau. Deux machines
+connectées séparément ont deux crédits distincts, et l'une refusée ne dit rien
+de l'autre.
 
 **Alertes.** Quels seuils doivent te prévenir avant le plafond. Chacun parle une
 fois par quota et par fenêtre de reset, pour qu'une limite que tu dépasses déjà
