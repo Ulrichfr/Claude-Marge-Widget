@@ -100,6 +100,46 @@
       ui: { bg: '#1B1B20', sheet: '#26262D', accent: '#7DD3FC' }
     },
 
+    win95: {
+      name: 'Windows 95', dark: false,
+      pill: '#C0C0C0', panel: '#C0C0C0', face: '#C0C0C0', faceHot: '#D4D0C8',
+      ink: '#000000', inkDim: 'rgba(0, 0, 0, 0.55)',
+      track: '#FFFFFF', shadow: 'rgba(0, 0, 0, 0.45)',
+      ok: '#008000', warm: '#8A7A00', hot: '#A85000', crit: '#AA0000',
+      radiusPill: 0, radiusPanel: 0,
+      font: '"MS Sans Serif", "Microsoft Sans Serif", Tahoma, "DejaVu Sans", sans-serif',
+      header: { bg: 'linear-gradient(90deg, #000080 0%, #1084D0 100%)', ink: '#FFFFFF' },
+      ui: { bg: '#008080', sheet: '#C0C0C0', accent: '#000080' },
+      // The era's whole visual grammar is the bevel: two light edges, two dark
+      // ones, and no curves anywhere.
+      css: `
+        .pill, .panel {
+          border: none !important;
+          box-shadow:
+            inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF,
+            inset -2px -2px 0 #808080, inset 2px 2px 0 #DFDFDF,
+            3px 3px 0 rgba(0, 0, 0, 0.4) !important;
+        }
+        .pill { padding-right: 2px; }
+        .panel-head { border-radius: 0 !important; font-weight: 700; padding: 4px 6px !important; }
+        .panel-title { font-size: 12px; letter-spacing: 0; }
+        .ring-face { box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #FFFFFF; }
+        .bar {
+          height: 15px; border-radius: 0; background: #FFFFFF; padding: 2px;
+          box-shadow: inset 1px 1px 0 #808080, inset -1px -1px 0 #FFFFFF,
+                      inset 2px 2px 0 #000000;
+        }
+        .bar span {
+          border-radius: 0;
+          background: repeating-linear-gradient(90deg,
+            var(--tone) 0 9px, transparent 9px 12px);
+        }
+        .row-badge { border-radius: 0; box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #FFF; }
+        .pct, .row-name, .row-foot { letter-spacing: 0; }
+        .panel-tail { display: none; }
+      `
+    },
+
     winxp: {
       name: 'Windows XP', dark: false,
       pill: '#ECE9D8', panel: '#ECE9D8', face: '#FFFFFF', faceHot: '#E3EFFB',
@@ -113,7 +153,81 @@
         bg: 'linear-gradient(180deg, #4C93E8 0%, #2266D4 8%, #0A3EAF 46%, #0A2E8C 100%)',
         ink: '#FFFFFF'
       },
+      // Luna is a blue frame, a glossy title bar and green gel that fills in
+      // segments. Anything less is just beige.
+      css: `
+        .panel {
+          border: 3px solid #0A3EAF;
+          box-shadow: 0 8px 24px rgba(10, 36, 106, 0.45);
+        }
+        .pill { border: 3px solid #0A3EAF; border-right: none; }
+        .panel-head {
+          font-weight: 700;
+          text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                      inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+          border-radius: 5px 5px 0 0 !important;
+        }
+        .bar {
+          height: 15px; border-radius: 3px; padding: 2px; background: #FFFFFF;
+          box-shadow: inset 0 0 0 1px #7F9DB9;
+        }
+        .bar span {
+          border-radius: 2px;
+          background-image:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%,
+              rgba(255, 255, 255, 0.05) 48%, rgba(0, 0, 0, 0.12) 100%),
+            repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0 9px,
+              rgba(255, 255, 255, 0.85) 9px 12px);
+        }
+        .row-badge { border-radius: 3px; box-shadow: inset 0 0 0 1px #7F9DB9; }
+      `,
       ui: { bg: '#D6E5F5', sheet: '#ECE9D8', accent: '#245EDC' }
+    },
+
+    aqua: {
+      name: 'Mac OS X Aqua', dark: false,
+      pill: '#F2F2F2', panel: '#F0F0F0', face: '#FBFBFB', faceHot: '#E9E9E9',
+      ink: '#0D0D0D', inkDim: 'rgba(13, 13, 13, 0.55)',
+      track: 'rgba(0, 0, 0, 0.12)', shadow: 'rgba(0, 0, 0, 0.3)',
+      ok: '#3D9E43', warm: '#B8860B', hot: '#D2691E', crit: '#C42B1C',
+      radiusPill: 14, radiusPanel: 12,
+      font: '"Lucida Grande", "Lucida Sans Unicode", "Helvetica Neue", sans-serif',
+      header: { bg: 'linear-gradient(180deg, #FAFAFA 0%, #D6D6D6 100%)', ink: '#1A1A1A' },
+      ui: { bg: '#DCE4EE', sheet: '#F4F4F4', accent: '#3C7DD9' },
+      // Aqua was pinstripes, a lit top edge, and progress bars that looked wet.
+      css: `
+        .pill, .panel {
+          background-image: repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.028) 0 1px, transparent 1px 4px);
+          border: 1px solid #A8A8A8;
+          box-shadow: inset 0 1px 0 #FFFFFF, 0 10px 28px var(--shadow);
+        }
+        .panel-head {
+          border-bottom: 1px solid #B4B4B4;
+          box-shadow: inset 0 1px 0 #FFFFFF;
+          border-radius: 11px 11px 0 0 !important;
+        }
+        .ring-face {
+          background-image: linear-gradient(180deg, #FFFFFF 0%, #E4E4E4 100%);
+          box-shadow: inset 0 1px 0 #FFFFFF, 0 1px 2px rgba(0, 0, 0, 0.22);
+        }
+        .bar {
+          height: 14px; border-radius: 7px;
+          background-image: linear-gradient(180deg, #D4D4D4 0%, #F0F0F0 100%);
+          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 -1px 0 #FFFFFF;
+        }
+        .bar span {
+          border-radius: 7px;
+          background-image:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%,
+              rgba(255, 255, 255, 0.28) 46%, rgba(255, 255, 255, 0) 52%),
+            repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.3) 0 7px,
+              transparent 7px 14px);
+          box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+        }
+        .row-badge { border-radius: 9px; }
+      `
     },
 
     win11: {
@@ -168,11 +282,13 @@
       '--crit': t.crit,
       // Optional material properties. Absent means "behave like a flat theme",
       // which is why each one has a neutral default rather than being skipped.
-      '--blur': t.blur ? `${t.blur}px` : '0px',
-      '--saturate': t.saturate ? `${t.saturate}%` : '100%',
+      '--blur': `${t.blur ?? 0}px`,
+      '--saturate': `${t.saturate ?? 100}%`,
       '--border': t.border || 'transparent',
-      '--radius-pill': `${t.radiusPill || 32}px`,
-      '--radius-panel': `${t.radiusPanel || 24}px`,
+      // ?? and not ||: a radius of 0 is exactly what Windows 95 asks for, and
+      // || would quietly hand it 32.
+      '--radius-pill': `${t.radiusPill ?? 32}px`,
+      '--radius-panel': `${t.radiusPanel ?? 24}px`,
       '--sheen': t.sheen ? '1' : '0',
       '--font': t.font || 'inherit',
       '--header-bg': (t.header && t.header.bg) || 'transparent',
@@ -192,5 +308,10 @@
     };
   }
 
-  return { THEMES, DEFAULT, ids, get, widgetVars, uiVars };
+  /** A theme may bring its own chrome when colours cannot express an era. */
+  function themeCss(id) {
+    return get(id).css || '';
+  }
+
+  return { THEMES, DEFAULT, ids, get, widgetVars, uiVars, themeCss };
 }));

@@ -156,17 +156,24 @@ does not notify you every two minutes. Set it to `[]` to stay silent.
 `language` is `auto`, or one of `en`, `fr`, `es`, `de`, `it`, `zh`, `ja`.
 `checkUpdates` turns the daily look at the repository on and off. `theme` is one
 of `midnight`, `graphite`, `nordic`, `ember`, `matcha`, `lilac`, `daylight`,
-`sand`, `glass`, `winxp`, `win11`, `ubuntu`. `timeFormat` is `auto`, `12` or
-`24`. `displayId` is `primary` or a
+`sand`, `glass`, `win95`, `winxp`, `aqua`, `win11`, `ubuntu`. `timeFormat` is
+`auto`, `12` or `24`. `displayId` is `primary` or a
 screen id, and is ignored while the widget follows the mouse.
 
-### Twelve themes
+### Fourteen themes
 
 <img src="docs/themes.png" alt="The pill in the eight themes: Midnight, Graphite, Nordic, Ember, Matcha, Lilac, Daylight and Sand" width="820">
 
-Six neutral darks, two lights, and four with a point of view: **Liquid Glass**,
-**Windows XP** with its Luna title bar, **Windows 11** in Mica, and **Ubuntu**
-in Yaru aubergine. The gauge tones stay semantic in every one of them: green
+Six neutral darks, two lights, and six with a point of view: **Liquid Glass**,
+**Windows 95**, **Windows XP**, **Mac OS X Aqua**, **Windows 11** in Mica, and
+**Ubuntu** in Yaru aubergine.
+
+The three period themes are not recolours. Colours alone cannot express an era,
+so a theme may bring its own chrome: Windows 95 gets the double bevel, square
+corners and segmented progress blocks; Windows XP gets the Luna blue frame, its
+glossy title bar and gel that fills in segments; Mac OS X Aqua gets pinstripes,
+a lit top edge and the candy-striped progress bars that looked wet. Each one
+brings its typeface with it. The gauge tones stay semantic in every one of them: green
 means room left, red means the ceiling is close, and the light themes get
 darker, denser tones because a pale yellow on white says nothing at all. The
 settings window wears the theme too, so the choice previews itself.
@@ -251,7 +258,7 @@ once a day and tells you when something is waiting, once per version, and never
 installs anything on its own.
 
 The part worth knowing: **an update that breaks the test suite is undone.**
-The commit you were on is recorded first, the 72 tests run before the restart,
+The commit you were on is recorded first, the 75 tests run before the restart,
 and a failure rolls the checkout back to where it was. A bad push upstream
 cannot leave you with a dead widget.
 
@@ -296,7 +303,7 @@ Useful commands:
 npm start                      # hover behaviour
 npm run demo                   # stays open, handy for positioning
 npm run usage                  # raw quotas as JSON, no interface
-npm test                       # 72 tests
+npm test                       # 75 tests
 tail ~/.claude-marge/widget.log   # one line per state change
 ```
 
@@ -304,7 +311,7 @@ tail ~/.claude-marge/widget.log   # one line per state change
 
 ## What is verified
 
-`npm test` runs 72 tests, covering the places where a mistake shows up
+`npm test` runs 75 tests, covering the places where a mistake shows up
 immediately.
 
 **Hover geometry and displays, 22 tests.** The right edge of a multi-monitor
@@ -313,12 +320,14 @@ been unplugged falling back to the primary, the window staying on screen
 whatever the number of models, and above all the absence of flicker: the area
 that keeps the widget open must always contain the strip that triggers it.
 
-**Themes and time format, 9 tests.** Every theme defines every surface and tone,
+**Themes and time format, 12 tests.** Every theme defines every surface and tone,
 an unknown one falls back rather than painting nothing, the four tones stay
 distinct so the gauges cannot lie, light themes use dark ink and dark themes
 light ink, a translucent theme has to declare its material rather than being a
-flat wash, and `auto` genuinely lets the locale decide instead of forcing a
-cycle.
+flat wash, a period theme really carries its chrome instead of being a
+recolour, that chrome contains style and nothing else, a corner radius of zero
+survives rather than being replaced by the default, and `auto` genuinely lets
+the locale decide instead of forcing a cycle.
 
 **Quota normalisation, 8 tests.** A missing quota never becomes a displayed
 zero, a model exposed twice by the API appears once, an empty response does not

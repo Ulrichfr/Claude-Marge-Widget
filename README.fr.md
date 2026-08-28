@@ -162,18 +162,27 @@ silence complet. `shortcut` bascule l'épinglage ; mets `""` pour n'enregistrer
 aucun raccourci. `language` vaut `auto`, ou l'un de `en`, `fr`, `es`, `de`,
 `it`, `zh`, `ja`. `checkUpdates` active ou coupe la vérification quotidienne du
 dépôt. `theme` vaut `midnight`, `graphite`, `nordic`, `ember`, `matcha`,
-`lilac`, `daylight`, `sand`, `glass`, `winxp`, `win11` ou `ubuntu`.
+`lilac`, `daylight`, `sand`, `glass`, `win95`, `winxp`, `aqua`, `win11` ou
+`ubuntu`.
 `timeFormat` vaut `auto`, `12` ou `24`.
 `displayId` vaut `primary` ou un identifiant d'écran, et reste ignoré tant que
 le widget suit la souris.
 
-### Douze thèmes
+### Quatorze thèmes
 
 <img src="docs/themes.png" alt="La pilule dans les huit thèmes : Midnight, Graphite, Nordic, Ember, Matcha, Lilac, Daylight et Sand" width="820">
 
-Six sombres neutres, deux clairs, et quatre qui ont un parti pris : **Liquid
-Glass**, **Windows XP** avec sa barre de titre Luna, **Windows 11** en Mica, et
-**Ubuntu** en aubergine Yaru. Les couleurs de jauge restent sémantiques dans
+Six sombres neutres, deux clairs, et six qui ont un parti pris : **Liquid
+Glass**, **Windows 95**, **Windows XP**, **Mac OS X Aqua**, **Windows 11** en
+Mica, et **Ubuntu** en aubergine Yaru.
+
+Les trois thèmes d'époque ne sont pas des recolorisations. Les couleurs seules
+ne savent pas dire une époque, donc un thème peut apporter son propre chrome :
+Windows 95 reçoit le double biseau, les angles droits et les blocs de
+progression segmentés ; Windows XP le cadre bleu Luna, sa barre de titre
+vernie et le gel qui se remplit par segments ; Mac OS X Aqua les rayures fines,
+l'arête haute éclairée et les barres striées bonbon qui avaient l'air mouillées.
+Chacun amène sa typographie avec lui. Les couleurs de jauge restent sémantiques dans
 tous : vert veut dire qu'il reste de la marge, rouge que le plafond est proche,
 et les thèmes clairs reçoivent des teintes plus foncées et plus denses, parce
 qu'un jaune pâle sur blanc ne dit rien du tout. La fenêtre de réglages porte
@@ -264,7 +273,7 @@ jour**, il regarde une fois par jour et te dit quand quelque chose attend, une
 seule fois par version, sans jamais rien installer de lui-même.
 
 Le point qui compte : **une mise à jour qui casse les tests est annulée.** Le
-commit d'origine est noté d'abord, les 72 tests tournent avant la relance, et un
+commit d'origine est noté d'abord, les 75 tests tournent avant la relance, et un
 échec ramène la copie exactement où elle était. Une mauvaise publication en
 amont ne peut pas te laisser un widget mort.
 
@@ -311,7 +320,7 @@ Commandes utiles :
 npm start                         # comportement au survol
 npm run demo                      # reste ouvert, pratique pour régler la position
 npm run usage                     # les quotas bruts en JSON, sans interface
-npm test                          # 72 tests
+npm test                          # 75 tests
 tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 ```
 
@@ -319,7 +328,7 @@ tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 
 ## Ce qui est vérifié
 
-`npm test` lance 72 tests, sur les endroits où une erreur se voit tout de suite.
+`npm test` lance 75 tests, sur les endroits où une erreur se voit tout de suite.
 
 **La géométrie du survol et les écrans, 22 tests.** Le bord droit en
 multi-écrans, la jointure entre deux écrans qui ne déclenche jamais, un écran
@@ -328,12 +337,15 @@ l'écran quel que soit le nombre de modèles, et surtout l'absence de
 clignotement : la zone qui garde le widget ouvert doit toujours contenir la
 bande qui le déclenche.
 
-**Les thèmes et le format d'heure, 9 tests.** Chaque thème définit toutes ses
+**Les thèmes et le format d'heure, 12 tests.** Chaque thème définit toutes ses
 surfaces et toutes ses teintes, un thème inconnu retombe sur un autre plutôt que
 de ne rien peindre, les quatre teintes restent distinctes pour que les jauges ne
 mentent pas, les thèmes clairs utilisent une encre foncée et l'inverse, un thème
-translucide doit déclarer son matériau au lieu d'être un simple voile, et `auto`
-laisse vraiment la locale décider au lieu de forcer un cycle.
+translucide doit déclarer son matériau au lieu d'être un simple voile, un thème
+d'époque porte vraiment son chrome au lieu d'être une recolorisation, ce chrome
+ne contient que du style, un rayon d'angle nul survit au lieu d'être remplacé
+par la valeur par défaut, et `auto` laisse vraiment la locale décider au lieu de
+forcer un cycle.
 
 **La normalisation des quotas, 8 tests.** Un quota absent ne devient jamais un
 zéro affiché, un modèle exposé deux fois par l'API n'apparaît qu'une fois, une

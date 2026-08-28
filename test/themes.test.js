@@ -99,4 +99,32 @@ test('a 24 hour setting shows 18:05 even in a 12 hour locale', () => {
   assert.ok(/PM/i.test(FORMAT.formatTime(at, 'fr-FR', '12')), 'AM/PM should win over the locale');
 });
 
+
+test('a theme that brings its own chrome brings only style', () => {
+  for (const id of THEMES.ids) {
+    const css = THEMES.themeCss(id);
+    assert.strictEqual(typeof css, 'string', `${id} returns something other than CSS`);
+    assert.ok(!/@import/i.test(css), `${id} imports a stylesheet, which would leave the app`);
+    assert.ok(!/url\(\s*['"]?https?:/i.test(css), `${id} fetches a remote asset`);
+    assert.ok(!/<\/?script/i.test(css), `${id} smuggles markup into a style block`);
+  }
+});
+
+test('every era theme actually carries its chrome', () => {
+  for (const id of ['win95', 'winxp', 'aqua']) {
+    assert.ok(THEMES.themeCss(id).length > 200, `${id} would be a flat recolour`);
+    assert.ok(THEMES.get(id).font, `${id} has no typeface of its own`);
+  }
+  assert.strictEqual(THEMES.themeCss('midnight'), '',
+    'a plain theme should not drag chrome along');
+});
+
+
+test('a radius of zero survives, because Windows 95 means zero', () => {
+  assert.strictEqual(THEMES.widgetVars('win95')['--radius-pill'], '0px',
+    'a falsy-but-meaningful value must not be replaced by the default');
+  assert.strictEqual(THEMES.widgetVars('win95')['--radius-panel'], '0px');
+  assert.strictEqual(THEMES.widgetVars('midnight')['--radius-pill'], '32px');
+});
+
 console.log(`\n${passed} theme and format tests passed`);

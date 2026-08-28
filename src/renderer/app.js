@@ -97,6 +97,10 @@ function applyTheme() {
   root2.dataset.sheen = t.sheen ? '1' : '0';
   root2.dataset.hasFont = t.font ? 'true' : 'false';
   root2.dataset.header = t.header ? 'true' : 'false';
+  // Colours alone cannot express a bevel or a pinstripe, so a theme may bring
+  // its own chrome. Replaced wholesale, never appended, or two eras would
+  // stack on top of each other.
+  document.getElementById('themeCss').textContent = THEMES.themeCss(theme);
 }
 
 function applyGeometry() {
