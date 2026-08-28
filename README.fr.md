@@ -219,10 +219,13 @@ déclencherait pendant que tu écris ailleurs.
 
 **Mises à jour.** Voir ci-dessous.
 
-Les changements s'appliquent dès l'enregistrement : le widget se repositionne,
-la langue bascule, le raccourci se réenregistre, le prochain appel est
-replanifié. Rien ne redémarre. La fenêtre écrit le même `config.json` que tu
-peux toujours modifier à la main, et **Montrer** l'ouvre.
+**Chaque changement s'applique à l'instant où tu le fais, et il est retenu.** Il
+n'y a pas de bouton Enregistrer, parce qu'une fenêtre de réglages qu'il faut
+confirmer ment sur ce qu'on est en train de regarder : tu choisis un thème et le
+widget se repeint dessous, tu bouges le curseur et la pilule bouge. La langue
+bascule, le raccourci se réenregistre, le prochain appel est replanifié, et rien
+ne redémarre. Tout atterrit dans le même `config.json` que tu peux toujours
+modifier à la main, et **Montrer** l'ouvre.
 
 <br clear="all">
 

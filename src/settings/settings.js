@@ -19,6 +19,34 @@ let displays = [];
 const $ = (id) => document.getElementById(id);
 const text = (id, value) => { $(id).textContent = value; };
 
+/**
+ * Every control writes through the moment it is touched.
+ *
+ * The previous design previewed a theme in this window and only pushed it to
+ * the widget on Save, which made picking a theme look like it did nothing.
+ * A settings window that has to be confirmed is a settings window that lies
+ * about what you are looking at.
+ */
+let commitTimer = null;
+let flagTimer = null;
+
+function commit(delay = 0) {
+  clearTimeout(commitTimer);
+  commitTimer = setTimeout(async () => {
+    await window.settings.save(draft);
+    const flag = $('savedFlag');
+    flag.classList.add('on');
+    clearTimeout(flagTimer);
+    flagTimer = setTimeout(() => flag.classList.remove('on'), 1400);
+  }, delay);
+}
+
+/** Repaint this window, then push the change everywhere else. */
+function change(delay = 0) {
+  paint();
+  commit(delay);
+}
+
 // --- Shortcut capture ---------------------------------------------------------
 
 const NAMED = {
@@ -144,7 +172,7 @@ function labels() {
   text('lblAutoCheck', s.autoCheck);
   text('checkNow', s.checkNow);
   text('updateNow', s.updateNow);
-  text('save', s.save);
+  text('save', s.close);
   text('savedFlag', s.saved);
   text('reset', s.reset);
   text('reveal', s.revealShort);
@@ -169,7 +197,7 @@ function buildControls() {
         <span class="pilllet" style="background:${t.pill}"></span>
       </span>
       <span class="name">${t.name}</span>`;
-    b.onclick = () => { draft.theme = id; paint(); };
+    b.onclick = () => { draft.theme = id; change(); };
     $('themes').appendChild(b);
   }
 
@@ -179,7 +207,7 @@ function buildControls() {
     b.dataset.value = value;
     b.textContent = value === 'auto' ? T.settings.auto
       : value === '24' ? T.settings.hour24 : T.settings.hour12;
-    b.onclick = () => { draft.timeFormat = value; paint(); };
+    b.onclick = () => { draft.timeFormat = value; change(); };
     $('timeFormat').appendChild(b);
   }
 
@@ -188,7 +216,7 @@ function buildControls() {
     const b = document.createElement('button');
     b.dataset.value = m;
     b.textContent = `${m} ${T.settings.minutes}`;
-    b.onclick = () => { draft.refreshSeconds = m * 60; paint(); };
+    b.onclick = () => { draft.refreshSeconds = m * 60; change(); };
     $('interval').appendChild(b);
   }
 
@@ -201,7 +229,7 @@ function buildControls() {
       const set = new Set(draft.alertAt || []);
       if (set.has(level)) set.delete(level); else set.add(level);
       draft.alertAt = [...set].sort((x, y) => x - y);
-      paint();
+      change();
     };
     $('thresholds').appendChild(b);
   }
@@ -219,7 +247,7 @@ function buildControls() {
     o.textContent = `${T.settings.screen} ${index + 1} · ${d.width}×${d.height}`;
     screens.appendChild(o);
   });
-  screens.onchange = () => { draft.displayId = screens.value; paint(); };
+  screens.onchange = () => { draft.displayId = screens.value; change(); };
 
   const select = $('language');
   select.innerHTML = '';
@@ -238,24 +266,28 @@ function buildControls() {
     T = I18N.pick(draft.language === 'auto' ? navigator.language : draft.language);
     labels();
     buildControls();
-    paint();
+    change();
   };
 }
 
 // --- Wiring -------------------------------------------------------------------
 
-$('vertical').oninput = (e) => { draft.verticalAnchor = Number(e.target.value) / 100; };
+// Dragging fires continuously: repaint at once, write through once it settles.
+$('vertical').oninput = (e) => {
+  draft.verticalAnchor = Number(e.target.value) / 100;
+  commit(280);
+};
 $('follow').onclick = () => {
   draft.followCursorDisplay = !(draft.followCursorDisplay !== false);
-  paint();
+  change();
 };
 $('alertsOn').onclick = () => {
   const on = Array.isArray(draft.alertAt) && draft.alertAt.length > 0;
   draft.alertAt = on ? [] : [80, 95];
-  paint();
+  change();
 };
-$('startAtLogin').onclick = () => { draft.startAtLogin = !draft.startAtLogin; paint(); };
-$('autoCheck').onclick = () => { draft.checkUpdates = !(draft.checkUpdates !== false); paint(); };
+$('startAtLogin').onclick = () => { draft.startAtLogin = !draft.startAtLogin; change(); };
+$('autoCheck').onclick = () => { draft.checkUpdates = !(draft.checkUpdates !== false); change(); };
 
 // --- Updates ------------------------------------------------------------------
 
@@ -329,7 +361,8 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Backspace' || e.key === 'Delete') {
     draft.shortcut = '';
     recording = false;
-    return paintShortcut();
+    paintShortcut();
+    return commit();
   }
   if (e.key === 'Escape') { recording = false; return paintShortcut(); }
   const accelerator = toAccelerator(e);
@@ -337,14 +370,10 @@ window.addEventListener('keydown', (e) => {
   draft.shortcut = accelerator;
   recording = false;
   paintShortcut();
+  commit();
 });
 
-$('save').onclick = async () => {
-  await window.settings.save(draft);
-  const flag = $('savedFlag');
-  flag.classList.add('on');
-  setTimeout(() => flag.classList.remove('on'), 1600);
-};
+$('save').onclick = () => window.close();
 $('reset').onclick = async () => { draft = await window.settings.reset(); paint(); };
 $('reveal').onclick = () => window.settings.reveal();
 

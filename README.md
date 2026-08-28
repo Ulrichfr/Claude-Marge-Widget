@@ -210,10 +210,12 @@ anywhere else.
 
 **Updates.** See below.
 
-Changes apply the moment you save: the widget repositions, the language
-switches, the shortcut rebinds, the next call is rescheduled. Nothing restarts.
-The window writes the same `config.json` you can still edit by hand, and
-**Reveal** opens it.
+**Every change applies the moment you make it, and is remembered.** There is no
+Save button, because a settings window that has to be confirmed lies about what
+you are looking at: pick a theme and the widget repaints under it, move the
+slider and the pill moves. The language switches, the shortcut rebinds, the next
+call is rescheduled, and nothing restarts. It all lands in the same
+`config.json` you can still edit by hand, and **Reveal** opens it.
 
 <br clear="all">
 
