@@ -265,17 +265,19 @@ function reveal(on) {
   if (on) {
     resetAnimation();
     requestAnimationFrame(() => requestAnimationFrame(animateIn));
-    setTimeout(() => {
-      panel.classList.add('open');
-      panel.setAttribute('aria-hidden', 'false');
-      placeTail(hotIndex);
-    }, 150);
     tickTimer = setInterval(refreshResetLabels, 20000);
   } else {
-    panel.classList.remove('open');
-    panel.setAttribute('aria-hidden', 'true');
+    setPanel(false);
     clearInterval(tickTimer);
   }
+}
+
+/* The panel is driven separately from the pill, because pinned mode keeps the
+   pill out while the panel still comes and goes with the pointer. */
+function setPanel(open) {
+  panel.classList.toggle('open', open);
+  panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+  if (open) placeTail(hotIndex);
 }
 
 /** "Resets in 51 min" has to stay true while the panel is open. */
@@ -297,6 +299,7 @@ window.widget.onGeometry((g) => {
 });
 window.widget.onUsage((d) => { data = d; hotIndex = -1; render(); setHot(0); });
 window.widget.onReveal(reveal);
+window.widget.onPanel(setPanel);
 window.widget.onCursor(onCursor);
 
 applyGeometry();

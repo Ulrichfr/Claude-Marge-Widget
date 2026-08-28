@@ -192,6 +192,19 @@ peux toujours modifier à la main, et **Montrer** l'ouvre.
 
 <br clear="all">
 
+### Garder visible
+
+<img src="docs/pinned.png" alt="La pilule épinglée seule au bord droit, sans la bulle" width="150" align="right">
+
+L'épinglage garde la **pilule** sortie, pas la bulle. La bulle est la moitié
+large, et la laisser en travers de l'écran toute la journée prendrait beaucoup
+de place ; elle continue d'aller et venir avec le pointeur, exactement comme au
+survol normal.
+
+`Cmd/Ctrl+Maj+M` bascule le mode, et le raccourci se change dans les Réglages.
+
+<br clear="all">
+
 ### Les mises à jour
 
 Le widget se met à jour depuis ce dépôt. **Vérifier** compare ta copie au
@@ -224,7 +237,7 @@ cd ~/.claude-marge && git pull && npm install && npm test
 | Rafraîchir maintenant | Interroge l'API tout de suite, quel que soit le rythme prévu. |
 | Afficher 3 secondes | Montre le widget sans aller chercher le bord. |
 | **Lancer au démarrage** | Case à cocher. La décocher laisse tourner le widget en cours, il ne reviendra simplement pas à ta prochaine session. |
-| **Garder visible** | Épingle le widget ouvert, sans survol. Aussi sur un raccourci global, `Cmd/Ctrl+Maj+M` par défaut. |
+| **Garder visible** | Épingle la pilule ouverte, sans survol. Aussi sur un raccourci global, `Cmd/Ctrl+Maj+M` par défaut. |
 | **Relancer le widget** | Redémarre par le superviseur, pratique après un changement de configuration. |
 | Réglages… | Ouvre la fenêtre de réglages. |
 | Rechercher des mises à jour… | Interroge le dépôt et ouvre les Réglages sur le résultat. |

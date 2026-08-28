@@ -184,6 +184,18 @@ The window writes the same `config.json` you can still edit by hand, and
 
 <br clear="all">
 
+### Keep visible
+
+<img src="docs/pinned.png" alt="The pinned pill alone at the right edge, without the panel" width="150" align="right">
+
+Pinning keeps the **pill** out, not the panel. The panel is the wide half, and
+leaving it across the screen all day would be a lot to give up; it still comes
+and goes with the pointer, exactly as it does on a normal hover.
+
+`Cmd/Ctrl+Shift+M` toggles it, and the shortcut is yours to change in Settings.
+
+<br clear="all">
+
 ### Updating
 
 The widget updates itself from this repository. **Check now** compares your
@@ -215,7 +227,7 @@ cd ~/.claude-marge && git pull && npm install && npm test
 | Refresh now | Ask the API immediately, whatever the schedule says. |
 | Show for 3 seconds | Reveal the widget without reaching for the edge. |
 | **Start at login** | Checkbox. Turning it off leaves the running widget alone, it simply will not come back at your next login. |
-| **Keep visible** | Pin the widget open, no hovering. Also on a global shortcut, `Cmd/Ctrl+Shift+M` by default. |
+| **Keep visible** | Pin the pill open, no hovering. Also on a global shortcut, `Cmd/Ctrl+Shift+M` by default. |
 | **Restart the widget** | Relaunch through the supervisor, handy after a config change. |
 | Settings… | Open the settings window. |
 | Check for updates… | Look at the repository and open Settings on the result. |

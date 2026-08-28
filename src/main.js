@@ -95,7 +95,8 @@ let lastData = { ok: false, reason: 'loading', gauges: [] };
 let lastGood = store.restoreLastGood();  // survives a restart, so no blank pill
 let failures = store.restoreFailures();  // survives a restart, so no lost backoff
 let inFlight = false;
-let pinned = false;       // stays open regardless of the cursor
+let pinned = false;       // pill stays out; the panel still follows the cursor
+let panelOpen = false;
 let alertLedger = store.read().alerts || {};
 if (lastGood) lastData = { ...lastGood, stale: true, reason: 'loading' };
 let ready = false; // the page finished loading and is listening
@@ -170,7 +171,10 @@ function createWindow() {
     win.webContents.send('usage', lastData);
     // A hover can happen before loading finishes: replay the current state,
     // otherwise the pill stays invisible until the next hover.
-    if (visible) win.webContents.send('reveal', true);
+    if (visible) {
+      win.webContents.send('reveal', true);
+      win.webContents.send('panel', panelOpen);
+    }
   });
 }
 
@@ -200,12 +204,24 @@ function setRows(n) {
 
 // --- Reveal and hide --------------------------------------------------------
 
+/**
+ * The panel is the expensive half: pinned, it would sit across the screen all
+ * day. So pinning keeps the pill out and lets the panel follow the pointer,
+ * the same way it does on a normal hover.
+ */
+function setPanel(open) {
+  if (open === panelOpen) return;
+  panelOpen = open;
+  if (ready && win && !win.isDestroyed()) win.webContents.send('panel', open);
+}
+
 function show() {
   if (!win || win.isDestroyed() || visible) return;
   visible = true;
   clearTimeout(hideTimer);
   win.showInactive();
   if (ready) win.webContents.send('reveal', true);
+  if (!pinned) setPanel(true);
   if (shouldRefreshOnReveal(lastGood && lastGood.fetchedAt, failures, Date.now())) refresh();
 }
 
@@ -215,6 +231,7 @@ function scheduleHide() {
     hideTimer = null;
     if (!visible || !win || win.isDestroyed()) return;
     visible = false;
+    setPanel(false);
     if (ready) win.webContents.send('reveal', false);
     // Let the exit animation play before hiding the window.
     setTimeout(() => { if (!visible && win) win.hide(); }, 320);
@@ -257,7 +274,13 @@ function poll() {
   const cursor = screen.getCursorScreenPoint();
   const all = screen.getAllDisplays();
 
-  if (pinned) { cancelHide(); sendCursor(cursor); return; }
+  if (pinned) {
+    cancelHide();
+    if (!visible) show();
+    setPanel(insideKeepAlive(cursor, win.getBounds(), rows, activeDisplay().workArea));
+    sendCursor(cursor);
+    return;
+  }
 
   if (!visible) {
     const display = screen.getDisplayNearestPoint(cursor);
@@ -366,8 +389,16 @@ function raiseAlerts(gauges) {
 function activeLocale() {
   return config.language && config.language !== 'auto' ? config.language : app.getLocale();
 }
-let T = I18N.pick(activeLocale());
+// Electron only knows the system locale after the ready event: called before
+// that, app.getLocale() returns an empty string, which silently fell back to
+// English and left the tray menu untranslated while the widget was not.
+let T = I18N.pick('en');
 let MENU = T.menu;
+
+function refreshLanguage() {
+  T = I18N.pick(activeLocale());
+  MENU = T.menu;
+}
 const IDLE_LABEL = 'Claude Marge';
 
 /** Rebuilt on every change so the checkbox always shows the real state. */
@@ -421,7 +452,7 @@ function createTray() {
 /** Pinned mode: the widget stays open until you unpin it. */
 function setPinned(on) {
   pinned = on;
-  if (pinned) show(); else scheduleHide();
+  if (pinned) { show(); setPanel(false); } else scheduleHide();
   buildMenu();
 }
 
@@ -514,8 +545,7 @@ function applyConfig(next) {
   if (typeof next.startAtLogin === 'boolean') autostart.setEnabled(next.startAtLogin);
 
   if (before.language !== config.language) {
-    T = I18N.pick(activeLocale());
-    MENU = T.menu;
+    refreshLanguage();
     sendGeometry();
   }
   if (before.shortcut !== config.shortcut) {
@@ -548,7 +578,8 @@ process.on('uncaughtException', (err) => trace(`uncaught: ${err && err.stack}`))
 process.on('unhandledRejection', (err) => trace(`unhandled rejection: ${err}`));
 
 app.whenReady().then(() => {
-  trace(`started pid=${process.pid} locale=${app.getLocale()}`);
+  refreshLanguage();
+  trace(`started pid=${process.pid} locale=${app.getLocale()} using=${activeLocale()} menu="${MENU.quit}"`);
   if (process.platform === 'darwin' && app.dock) app.dock.hide();
   createWindow();
   createTray();
