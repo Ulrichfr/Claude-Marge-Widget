@@ -16,6 +16,20 @@
   --ease: cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
+/* On a light theme the overlays have to darken instead of lighten, otherwise
+   every border and field disappears into the paper. */
+:root[data-light="true"] {
+  --line: rgba(0, 0, 0, 0.09);
+  --ink-2: rgba(20, 20, 24, 0.62);
+  --ink-3: rgba(20, 20, 24, 0.42);
+  --field: rgba(0, 0, 0, 0.05);
+  --field-hi: rgba(0, 0, 0, 0.09);
+}
+:root[data-light="true"] .switch i { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); }
+:root[data-light="true"] button.primary { background: #16161A; color: #fff; }
+:root[data-light="true"] button.primary:hover { background: #000; }
+:root[data-light="true"] .sheet::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.14); }
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
@@ -188,6 +202,53 @@ body { display: flex; flex-direction: column; }
   color: var(--ink);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
+
+/* --- Theme swatches -------------------------------------------------------- */
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+}
+
+.swatch {
+  border: 1.5px solid var(--line);
+  background: transparent;
+  border-radius: 12px;
+  padding: 7px 7px 6px;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 180ms var(--ease), transform 180ms var(--ease);
+}
+.swatch:hover { transform: translateY(-1px); border-color: rgba(128, 128, 128, 0.4); }
+.swatch[aria-pressed="true"] { border-color: var(--accent); }
+
+/* A miniature of the real thing: the panel, the pill, and the four tones. */
+.swatch .preview {
+  display: flex;
+  gap: 3px;
+  align-items: stretch;
+  height: 32px;
+  border-radius: 7px;
+  overflow: hidden;
+  padding: 4px;
+}
+.swatch .preview .sheetlet { flex: 1; border-radius: 4px; }
+.swatch .preview .pilllet { width: 9px; border-radius: 3px; }
+.swatch .preview .tones { display: flex; flex-direction: column; gap: 2px; width: 5px; }
+.swatch .preview .tones i { flex: 1; border-radius: 2px; }
+
+.swatch .name {
+  display: block;
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: var(--ink-3);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.swatch[aria-pressed="true"] .name { color: var(--ink); }
 
 /* --- Chips ----------------------------------------------------------------- */
 

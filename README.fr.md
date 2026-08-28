@@ -148,7 +148,10 @@ d'état :
   "refreshSeconds": 120,
   "followCursorDisplay": true,
   "alertAt": [80, 95],
-  "shortcut": "CommandOrControl+Shift+M"
+  "shortcut": "CommandOrControl+Shift+M",
+  "theme": "midnight",
+  "timeFormat": "auto",
+  "displayId": "primary"
 }
 ```
 
@@ -158,7 +161,35 @@ dépasses déjà ne te prévienne pas toutes les deux minutes. Mets `[]` pour le
 silence complet. `shortcut` bascule l'épinglage ; mets `""` pour n'enregistrer
 aucun raccourci. `language` vaut `auto`, ou l'un de `en`, `fr`, `es`, `de`,
 `it`, `zh`, `ja`. `checkUpdates` active ou coupe la vérification quotidienne du
-dépôt.
+dépôt. `theme` vaut `midnight`, `graphite`, `nordic`, `ember`, `matcha`,
+`lilac`, `daylight` ou `sand`. `timeFormat` vaut `auto`, `12` ou `24`.
+`displayId` vaut `primary` ou un identifiant d'écran, et reste ignoré tant que
+le widget suit la souris.
+
+### Huit thèmes, clairs et sombres
+
+<img src="docs/themes.png" alt="La pilule dans les huit thèmes : Midnight, Graphite, Nordic, Ember, Matcha, Lilac, Daylight et Sand" width="820">
+
+Six sombres, deux clairs. Les couleurs de jauge restent sémantiques dans tous :
+vert veut dire qu'il reste de la marge, rouge que le plafond est proche, et les
+thèmes clairs reçoivent des teintes plus foncées et plus denses, parce qu'un
+jaune pâle sur blanc ne dit rien du tout. La fenêtre de réglages porte elle
+aussi le thème, donc le choix se prévisualise tout seul.
+
+L'heure suit ton système par défaut, ou se fige en **24 h** ou **AM / PM**.
+
+### Plusieurs écrans
+
+Active **Suivre la souris d'un écran à l'autre** et le widget apparaît sur
+l'écran où se trouve le pointeur. Désactive-le et il reste où tu l'as mis, sur
+l'écran principal ou sur celui que tu choisis.
+
+Seuls les vrais bords extérieurs déclenchent. La jointure entre deux écrans côte
+à côte, jamais, parce que l'atteindre ferait surgir la pilule au milieu de ton
+bureau. Les écrans qui vont et viennent sont gérés : branche une station
+d'accueil, ferme un capot, change une résolution, et le widget se repositionne.
+Un widget fixé sur un écran qu'on vient de débrancher retombe sur l'écran
+principal, au lieu d'être dessiné hors du bureau où tu ne le reverrais jamais.
 
 ### Les réglages
 
@@ -167,8 +198,11 @@ dépôt.
 Tout est dans le menu de la barre d'état, sous **Réglages**. La fenêtre fait 520
 points de large et défile ; la capture de droite montre le panneau entier.
 
-**Placement.** Où se pose la pilule le long du bord droit, et si elle suit la
-souris d'un écran à l'autre.
+**Apparence.** Le thème, et si l'heure s'écrit en 24 h ou en AM / PM.
+
+**Placement.** Où se pose la pilule le long du bord droit, si elle suit la
+souris d'un écran à l'autre, et sur quel écran elle vit quand ce n'est pas le
+cas.
 
 **Données.** À quelle fréquence interroger. Deux minutes par défaut, parce que
 demander plus souvent est exactement ce qui vaut un refus, et que ces chiffres
@@ -214,7 +248,7 @@ jour**, il regarde une fois par jour et te dit quand quelque chose attend, une
 seule fois par version, sans jamais rien installer de lui-même.
 
 Le point qui compte : **une mise à jour qui casse les tests est annulée.** Le
-commit d'origine est noté d'abord, les 55 tests tournent avant la relance, et un
+commit d'origine est noté d'abord, les 71 tests tournent avant la relance, et un
 échec ramène la copie exactement où elle était. Une mauvaise publication en
 amont ne peut pas te laisser un widget mort.
 
@@ -261,7 +295,7 @@ Commandes utiles :
 npm start                         # comportement au survol
 npm run demo                      # reste ouvert, pratique pour régler la position
 npm run usage                     # les quotas bruts en JSON, sans interface
-npm test                          # 55 tests
+npm test                          # 71 tests
 tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 ```
 
@@ -269,12 +303,20 @@ tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 
 ## Ce qui est vérifié
 
-`npm test` lance 55 tests, sur les endroits où une erreur se voit tout de suite.
+`npm test` lance 71 tests, sur les endroits où une erreur se voit tout de suite.
 
-**La géométrie du survol, 14 tests.** Le bord droit en multi-écrans, la fenêtre
-qui reste dans l'écran quel que soit le nombre de modèles, et surtout l'absence
-de clignotement : la zone qui garde le widget ouvert doit toujours contenir la
+**La géométrie du survol et les écrans, 22 tests.** Le bord droit en
+multi-écrans, la jointure entre deux écrans qui ne déclenche jamais, un écran
+choisi puis débranché qui retombe sur le principal, la fenêtre qui reste dans
+l'écran quel que soit le nombre de modèles, et surtout l'absence de
+clignotement : la zone qui garde le widget ouvert doit toujours contenir la
 bande qui le déclenche.
+
+**Les thèmes et le format d'heure, 8 tests.** Chaque thème définit toutes ses
+surfaces et toutes ses teintes, un thème inconnu retombe sur un autre plutôt que
+de ne rien peindre, les quatre teintes restent distinctes pour que les jauges ne
+mentent pas, les thèmes clairs utilisent une encre foncée et l'inverse, et
+`auto` laisse vraiment la locale décider au lieu de forcer un cycle.
 
 **La normalisation des quotas, 8 tests.** Un quota absent ne devient jamais un
 zéro affiché, un modèle exposé deux fois par l'API n'apparaît qu'une fois, une

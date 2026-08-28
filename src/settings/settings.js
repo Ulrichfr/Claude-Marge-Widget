@@ -4,6 +4,7 @@
    system registration rather than a value in the file. */
 
 const INTERVALS = [1, 2, 5, 10];          // minutes
+const TIME_FORMATS = ['auto', '24', '12'];
 const THRESHOLDS = [50, 70, 80, 90, 95];  // offered marks
 
 const ASTERISK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -13,6 +14,7 @@ const ASTERISK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 let T;
 let draft = {};
 let recording = false;
+let displays = [];
 
 const $ = (id) => document.getElementById(id);
 const text = (id, value) => { $(id).textContent = value; };
@@ -66,9 +68,29 @@ function paintShortcut() {
 
 function paintSwitch(id, on) { $(id).setAttribute('aria-checked', on ? 'true' : 'false'); }
 
+/** The settings window wears the theme too, so the choice is its own preview. */
+function applyTheme() {
+  const id = draft.theme || THEMES.DEFAULT;
+  const root = document.documentElement;
+  for (const [name, value] of Object.entries(THEMES.uiVars(id))) {
+    root.style.setProperty(name, value);
+  }
+  root.dataset.light = THEMES.get(id).dark ? 'false' : 'true';
+}
+
 function paint() {
+  applyTheme();
+  [...$('themes').children].forEach((b) =>
+    b.setAttribute('aria-pressed', b.dataset.value === (draft.theme || THEMES.DEFAULT)));
+  [...$('timeFormat').children].forEach((b) =>
+    b.setAttribute('aria-pressed', b.dataset.value === (draft.timeFormat || 'auto')));
   $('vertical').value = Math.round((draft.verticalAnchor ?? 0.45) * 100);
-  paintSwitch('follow', draft.followCursorDisplay !== false);
+  const follows = draft.followCursorDisplay !== false;
+  paintSwitch('follow', follows);
+  // Choosing a screen only means something when the widget is not chasing the
+  // mouse, and only when there is more than one screen to choose from.
+  $('displayRow').hidden = follows || displays.length < 2;
+  $('displayId').value = draft.displayId || 'primary';
 
   const minutes = Math.round((draft.refreshSeconds || 120) / 60);
   [...$('interval').children].forEach((b) =>
@@ -100,6 +122,8 @@ function labels() {
   text('lblBottom', s.bottom);
   text('lblFollow', s.follow);
   text('hintFollow', s.followHint);
+  text('lblDisplay', s.display);
+  text('hintDisplay', s.displayHint);
   text('lblData', s.data);
   text('lblInterval', s.interval);
   text('hintInterval', s.intervalHint);
@@ -112,6 +136,9 @@ function labels() {
   text('lblShortcut', s.shortcut);
   text('hintShortcut', s.shortcutHint);
   text('lblLanguage', s.language);
+  text('lblAppearance', s.appearance);
+  text('lblTheme', s.theme);
+  text('lblTimeFormat', s.timeFormat);
   text('lblUpdates', s.updates);
   text('lblInstalled', s.installed);
   text('lblAutoCheck', s.autoCheck);
@@ -125,6 +152,37 @@ function labels() {
 }
 
 function buildControls() {
+  $('themes').innerHTML = '';
+  for (const id of THEMES.ids) {
+    const t = THEMES.get(id);
+    const b = document.createElement('button');
+    b.className = 'swatch';
+    b.dataset.value = id;
+    b.title = t.name;
+    b.innerHTML = `
+      <span class="preview" style="background:${t.ui.bg}">
+        <span class="sheetlet" style="background:${t.panel}"></span>
+        <span class="tones">
+          <i style="background:${t.ok}"></i><i style="background:${t.warm}"></i>
+          <i style="background:${t.hot}"></i><i style="background:${t.crit}"></i>
+        </span>
+        <span class="pilllet" style="background:${t.pill}"></span>
+      </span>
+      <span class="name">${t.name}</span>`;
+    b.onclick = () => { draft.theme = id; paint(); };
+    $('themes').appendChild(b);
+  }
+
+  $('timeFormat').innerHTML = '';
+  for (const value of TIME_FORMATS) {
+    const b = document.createElement('button');
+    b.dataset.value = value;
+    b.textContent = value === 'auto' ? T.settings.auto
+      : value === '24' ? T.settings.hour24 : T.settings.hour12;
+    b.onclick = () => { draft.timeFormat = value; paint(); };
+    $('timeFormat').appendChild(b);
+  }
+
   $('interval').innerHTML = '';
   for (const m of INTERVALS) {
     const b = document.createElement('button');
@@ -147,6 +205,21 @@ function buildControls() {
     };
     $('thresholds').appendChild(b);
   }
+
+  const screens = $('displayId');
+  screens.innerHTML = '';
+  const primary = document.createElement('option');
+  primary.value = 'primary';
+  primary.textContent = T.settings.primaryDisplay;
+  screens.appendChild(primary);
+  displays.forEach((d, index) => {
+    if (d.primary) return;
+    const o = document.createElement('option');
+    o.value = d.id;
+    o.textContent = `${T.settings.screen} ${index + 1} · ${d.width}×${d.height}`;
+    screens.appendChild(o);
+  });
+  screens.onchange = () => { draft.displayId = screens.value; paint(); };
 
   const select = $('language');
   select.innerHTML = '';
@@ -275,8 +348,9 @@ $('save').onclick = async () => {
 $('reset').onclick = async () => { draft = await window.settings.reset(); paint(); };
 $('reveal').onclick = () => window.settings.reveal();
 
-window.settings.load().then((cfg) => {
+Promise.all([window.settings.load(), window.settings.displays()]).then(([cfg, screens]) => {
   draft = { ...cfg };
+  displays = screens || [];
   T = I18N.pick(draft.language && draft.language !== 'auto' ? draft.language : navigator.language);
   labels();
   buildControls();

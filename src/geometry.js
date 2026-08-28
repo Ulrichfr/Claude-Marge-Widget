@@ -103,7 +103,42 @@ function insideKeepAlive(cursor, winBounds, rows, workArea) {
     cursor.y <= bottom + G.keepAliveMargin;
 }
 
+/**
+ * Which display the widget belongs on right now.
+ *
+ * Three cases, and the third is the one that bites: following the mouse, a
+ * chosen display, and a chosen display that has just been unplugged. A widget
+ * pinned to a screen that no longer exists would be positioned off the desktop
+ * and never seen again, so an unknown id always falls back to the primary.
+ *
+ * @param {{displays: Array, primaryId: any, cursorPoint: {x,y}|null,
+ *          follow: boolean, preferredId: any}} options
+ */
+function pickDisplay({ displays, primaryId, cursorPoint, follow, preferredId }) {
+  const list = displays || [];
+  if (!list.length) return null;
+  const primary = list.find((d) => d.id === primaryId) || list[0];
+
+  if (follow && cursorPoint) {
+    const under = list.find((d) => {
+      const b = d.bounds;
+      return cursorPoint.x >= b.x && cursorPoint.x < b.x + b.width &&
+        cursorPoint.y >= b.y && cursorPoint.y < b.y + b.height;
+    });
+    // Only a real outer edge is worth moving to; the seam between two screens
+    // would put the widget in the middle of the desktop.
+    if (under && isOuterRightEdge(under, list)) return under;
+    return null;   // nothing to do: leave the widget where it is
+  }
+
+  if (preferredId && preferredId !== 'primary') {
+    const chosen = list.find((d) => String(d.id) === String(preferredId));
+    if (chosen) return chosen;
+  }
+  return primary;
+}
+
 module.exports = {
   G, STEPS, layout, boundsForDisplay, pillBand,
-  isOuterRightEdge, inHotZone, insideKeepAlive
+  isOuterRightEdge, inHotZone, insideKeepAlive, pickDisplay
 };

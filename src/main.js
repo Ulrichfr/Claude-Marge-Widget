@@ -25,7 +25,7 @@ const alerts = require('./alerts');
 const updater = require('./updater');
 const {
   G, layout, boundsForDisplay: computeBounds,
-  isOuterRightEdge, inHotZone, insideKeepAlive
+  isOuterRightEdge, inHotZone, insideKeepAlive, pickDisplay
 } = require('./geometry');
 
 // The number of rings depends on the account: every model carries its own
@@ -39,8 +39,11 @@ const DEFAULTS = {
   verticalAnchor: 0.45,   // 0 = top of the screen, 1 = bottom
   refreshSeconds: 120,
   followCursorDisplay: true, // show up on whichever display holds the cursor
+  displayId: 'primary',      // used when the widget does not follow the mouse
   language: 'auto',          // 'auto', or one of the codes in src/i18n.js
   checkUpdates: true,        // look for a new commit once a day, and say so
+  theme: 'midnight',         // see src/themes.js
+  timeFormat: 'auto',        // 'auto', '12' or '24'
   alertAt: [80, 95],         // notify once when a quota crosses these marks
   shortcut: 'CommandOrControl+Shift+M' // toggle pinned mode; '' disables it
 };
@@ -113,6 +116,33 @@ function activeDisplay() {
     || screen.getPrimaryDisplay();
 }
 
+/** The display the settings say the widget belongs on, right now. */
+function preferredDisplay() {
+  return pickDisplay({
+    displays: screen.getAllDisplays(),
+    primaryId: screen.getPrimaryDisplay().id,
+    cursorPoint: null,
+    follow: false,
+    preferredId: config.displayId
+  }) || screen.getPrimaryDisplay();
+}
+
+/**
+ * Screens come and go: a laptop lid closes, a dock is unplugged, a resolution
+ * changes. Without this the widget keeps its old coordinates and ends up drawn
+ * outside every desktop, which looks exactly like a crash.
+ */
+function onDisplaysChanged() {
+  const displays = screen.getAllDisplays();
+  const stillThere = displays.some((d) => d.id === currentDisplayId);
+  const target = stillThere && config.followCursorDisplay
+    ? activeDisplay()
+    : preferredDisplay();
+  trace(`displays changed: ${displays.length} present, moving to ${target.id}`);
+  placeOn(target);
+  if (visible) setPanel(panelOpen);
+}
+
 function placeOn(display) {
   if (!win || win.isDestroyed()) return;
   currentDisplayId = display.id;
@@ -122,7 +152,7 @@ function placeOn(display) {
 // --- Window -----------------------------------------------------------------
 
 function createWindow() {
-  const display = screen.getPrimaryDisplay();
+  const display = preferredDisplay();
   win = new BrowserWindow({
     ...boundsForDisplay(display),
     frame: false,
@@ -189,6 +219,8 @@ function sendGeometry() {
     rowGap: m.rowGap,
     pillPadding: m.pillPadding,
     locale: activeLocale(),
+    theme: config.theme || 'midnight',
+    timeFormat: config.timeFormat || 'auto',
     rows
   });
 }
@@ -539,13 +571,17 @@ function openSettings() {
  * be the kind of detail that makes a tool feel cheap.
  */
 function applyConfig(next) {
-  const before = { shortcut: config.shortcut, language: config.language };
+  const before = {
+    shortcut: config.shortcut, language: config.language,
+    theme: config.theme, timeFormat: config.timeFormat
+  };
   config = { ...config, ...next };
 
   if (typeof next.startAtLogin === 'boolean') autostart.setEnabled(next.startAtLogin);
 
-  if (before.language !== config.language) {
-    refreshLanguage();
+  if (before.language !== config.language) refreshLanguage();
+  if (before.language !== config.language || before.theme !== config.theme ||
+      before.timeFormat !== config.timeFormat) {
     sendGeometry();
   }
   if (before.shortcut !== config.shortcut) {
@@ -553,7 +589,7 @@ function applyConfig(next) {
     registerShortcut();
   }
 
-  placeOn(activeDisplay());
+  placeOn(config.followCursorDisplay ? activeDisplay() : preferredDisplay());
   buildMenu();
   scheduleUpdateCheck();
   clearTimeout(refreshTimer);
@@ -588,6 +624,9 @@ app.whenReady().then(() => {
   registerShortcut();
   // Waking from sleep with hours-old numbers is worse than one extra call.
   powerMonitor.on('resume', () => { failures = 0; refresh(); });
+  for (const event of ['display-added', 'display-removed', 'display-metrics-changed']) {
+    screen.on(event, onDisplaysChanged);
+  }
   scheduleUpdateCheck();
   // One look shortly after start, once the widget has settled.
   setTimeout(() => { if (config.checkUpdates !== false) checkForUpdates({ notify: true }); }, 30000);
@@ -603,6 +642,16 @@ ipcMain.handle('settings:save', (_e, next) => {
   saveConfig(stored);
   applyConfig({ ...stored, startAtLogin });
   return true;
+});
+ipcMain.handle('settings:displays', () => {
+  const primaryId = screen.getPrimaryDisplay().id;
+  return screen.getAllDisplays().map((d) => ({
+    id: String(d.id),
+    primary: d.id === primaryId,
+    width: d.bounds.width,
+    height: d.bounds.height,
+    outerRight: isOuterRightEdge(d, screen.getAllDisplays())
+  }));
 });
 ipcMain.handle('updates:check', () => checkForUpdates({ notify: false }));
 ipcMain.handle('updates:apply', async () => {

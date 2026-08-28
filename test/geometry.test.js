@@ -124,4 +124,77 @@ test('the keep-alive area contains the trigger strip, at any ring count', () => 
   }
 });
 
+
+// --- Multi-monitor -----------------------------------------------------------
+
+const D = (id, x, width = 1920, height = 1080) =>
+  ({ id, bounds: { x, y: 0, width, height } });
+
+test('following the mouse picks the screen under the pointer', () => {
+  const displays = [D(1, 0), D(2, 1920)];
+  const chosen = g.pickDisplay({
+    displays, primaryId: 1, cursorPoint: { x: 2500, y: 400 }, follow: true
+  });
+  assert.strictEqual(chosen.id, 2);
+});
+
+test('following the mouse ignores a screen whose right edge is a seam', () => {
+  const displays = [D(1, 0), D(2, 1920)];
+  const chosen = g.pickDisplay({
+    displays, primaryId: 1, cursorPoint: { x: 900, y: 400 }, follow: true
+  });
+  assert.strictEqual(chosen, null, 'moving there would put the pill mid-desktop');
+});
+
+test('a chosen display is honoured when it is plugged in', () => {
+  const displays = [D(1, 0), D(2, 1920)];
+  const chosen = g.pickDisplay({
+    displays, primaryId: 1, cursorPoint: null, follow: false, preferredId: '2'
+  });
+  assert.strictEqual(chosen.id, 2);
+});
+
+test('a chosen display that was unplugged falls back to the primary', () => {
+  const displays = [D(1, 0)];
+  const chosen = g.pickDisplay({
+    displays, primaryId: 1, cursorPoint: null, follow: false, preferredId: '99'
+  });
+  assert.strictEqual(chosen.id, 1,
+    'a widget pinned to a missing screen would be drawn off the desktop');
+});
+
+test('primary means primary, whatever order the screens come in', () => {
+  const displays = [D(7, 1920), D(3, 0)];
+  const chosen = g.pickDisplay({
+    displays, primaryId: 3, cursorPoint: null, follow: false, preferredId: 'primary'
+  });
+  assert.strictEqual(chosen.id, 3);
+});
+
+test('no displays at all returns nothing rather than throwing', () => {
+  assert.strictEqual(g.pickDisplay({ displays: [], primaryId: 1, follow: false }), null);
+});
+
+test('a vertically stacked pair both count as outer right edges', () => {
+  const top = { id: 1, bounds: { x: 0, y: 0, width: 1920, height: 1080 } };
+  const bottom = { id: 2, bounds: { x: 0, y: 1080, width: 1920, height: 1080 } };
+  for (const d of [top, bottom]) {
+    const chosen = g.pickDisplay({
+      displays: [top, bottom], primaryId: 1, follow: true,
+      cursorPoint: { x: 1900, y: d.bounds.y + 500 }
+    });
+    assert.strictEqual(chosen.id, d.id);
+  }
+});
+
+test('screens of different resolutions each get their own layout', () => {
+  const big = { x: 0, y: 0, width: 3840, height: 2160 };
+  const small = { x: 0, y: 0, width: 1280, height: 800 };
+  const a = g.boundsForDisplay(big, 5, 0.45);
+  const b = g.boundsForDisplay(small, 5, 0.45);
+  assert.strictEqual(a.x + a.width, big.width);
+  assert.strictEqual(b.x + b.width, small.width);
+  assert.ok(b.y + b.height <= small.height, 'the small screen would overflow');
+});
+
 console.log(`\n${passed} geometry tests passed`);

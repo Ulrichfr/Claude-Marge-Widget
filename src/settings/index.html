@@ -17,6 +17,18 @@
 
   <main class="sheet">
     <section class="group">
+      <h2 id="lblAppearance"></h2>
+      <div class="row stack">
+        <div class="row-label"><span id="lblTheme"></span></div>
+        <div class="swatches" id="themes"></div>
+      </div>
+      <div class="row stack">
+        <div class="row-label"><span id="lblTimeFormat"></span></div>
+        <div class="segmented" id="timeFormat"></div>
+      </div>
+    </section>
+
+    <section class="group">
       <h2 id="lblPlacement"></h2>
 
       <div class="row stack">
@@ -36,6 +48,18 @@
           <em id="hintFollow"></em>
         </div>
         <button class="switch" id="follow" role="switch"><i></i></button>
+      </div>
+
+      <div class="row" id="displayRow" hidden>
+        <div class="row-label">
+          <span id="lblDisplay"></span>
+          <em id="hintDisplay"></em>
+        </div>
+        <div class="select-wrap">
+          <select id="displayId"></select>
+          <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.6 6 6.4l5-4.8" fill="none"
+            stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
       </div>
     </section>
 
@@ -120,6 +144,7 @@
   </footer>
 
   <script src="../i18n.js"></script>
+  <script src="../themes.js"></script>
   <script src="settings.js"></script>
 </body>
 </html>

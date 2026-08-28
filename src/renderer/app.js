@@ -33,6 +33,8 @@ const ICONS = {
 };
 
 let geo = { pillWidth: 92, ring: 60, ringLabel: 22, ringToLabel: 10, rowGap: 26, pillPadding: 22 };
+let theme = THEMES.DEFAULT;
+let timeFormat = 'auto';
 let data = { ok: false, reason: 'loading', gauges: [] };
 let revealed = false;
 let items = [];
@@ -61,7 +63,7 @@ function formatReset(iso, style) {
   }
   const sameDay = at.toDateString() === new Date().toDateString();
   const day = sameDay ? T.today : at.toLocaleDateString(LOCALE, { weekday: 'short' });
-  return T.resetAt(day, at.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' }));
+  return T.resetAt(day, FORMAT.formatTime(at, LOCALE, timeFormat));
 }
 
 function label(g) {
@@ -82,6 +84,15 @@ function countTo(el, from, to, duration) {
 }
 
 // --- Building ----------------------------------------------------------------
+
+/** Theme first: the surfaces are what everything else is measured against. */
+function applyTheme() {
+  const root = document.documentElement.style;
+  for (const [name, value] of Object.entries(THEMES.widgetVars(theme))) {
+    root.setProperty(name, value);
+  }
+  document.documentElement.dataset.light = THEMES.get(theme).dark ? 'false' : 'true';
+}
 
 function applyGeometry() {
   const root = document.documentElement.style;
@@ -180,8 +191,7 @@ function render() {
     panelRows.appendChild(buildPanelRow(g));
   });
 
-  const readAt = new Date(data.fetchedAt)
-    .toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
+  const readAt = FORMAT.formatTime(data.fetchedAt, LOCALE, timeFormat);
   panelNote.textContent = data.stale ? T.stale(readAt) : readAt;
   panelNote.classList.toggle('warn', !!data.stale);
 
@@ -294,6 +304,9 @@ function refreshResetLabels() {
 window.widget.onGeometry((g) => {
   geo = { ...geo, ...g };
   if (g.locale) { LOCALE = g.locale; T = I18N.pick(g.locale); }
+  if (g.theme) theme = g.theme;
+  if (g.timeFormat) timeFormat = g.timeFormat;
+  applyTheme();
   applyGeometry();
   render();
 });
@@ -302,5 +315,6 @@ window.widget.onReveal(reveal);
 window.widget.onPanel(setPanel);
 window.widget.onCursor(onCursor);
 
+applyTheme();
 applyGeometry();
 render();

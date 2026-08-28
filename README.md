@@ -142,7 +142,10 @@ menu.
   "refreshSeconds": 120,
   "followCursorDisplay": true,
   "alertAt": [80, 95],
-  "shortcut": "CommandOrControl+Shift+M"
+  "shortcut": "CommandOrControl+Shift+M",
+  "theme": "midnight",
+  "timeFormat": "auto",
+  "displayId": "primary"
 }
 ```
 
@@ -151,7 +154,34 @@ once per level, per quota, per reset window, so a limit you are sitting above
 does not notify you every two minutes. Set it to `[]` to stay silent.
 `shortcut` toggles the pinned view; set it to `""` to register nothing.
 `language` is `auto`, or one of `en`, `fr`, `es`, `de`, `it`, `zh`, `ja`.
-`checkUpdates` turns the daily look at the repository on and off.
+`checkUpdates` turns the daily look at the repository on and off. `theme` is one
+of `midnight`, `graphite`, `nordic`, `ember`, `matcha`, `lilac`, `daylight`,
+`sand`. `timeFormat` is `auto`, `12` or `24`. `displayId` is `primary` or a
+screen id, and is ignored while the widget follows the mouse.
+
+### Eight themes, light and dark
+
+<img src="docs/themes.png" alt="The pill in the eight themes: Midnight, Graphite, Nordic, Ember, Matcha, Lilac, Daylight and Sand" width="820">
+
+Six dark, two light. The gauge tones stay semantic in every one of them: green
+means room left, red means the ceiling is close, and the light themes get
+darker, denser tones because a pale yellow on white says nothing at all. The
+settings window wears the theme too, so the choice previews itself.
+
+Times follow your system by default, or you can pin **24 h** or **AM / PM**.
+
+### Multiple displays
+
+Turn **Follow the mouse across displays** on and the widget appears on whichever
+screen holds the pointer. Turn it off and it stays where you put it, on the
+primary display or on a screen you pick.
+
+Only real outer edges trigger it. The seam between two side-by-side screens
+never does, because reaching it would make the pill surface in the middle of
+your desktop. Screens that come and go are handled: plug a dock in, close a lid,
+change a resolution, and the widget repositions itself. A widget pinned to a
+screen that has just been unplugged falls back to the primary rather than being
+drawn off the desktop, where you would never see it again.
 
 ### Settings
 
@@ -160,8 +190,11 @@ does not notify you every two minutes. Set it to `[]` to stay silent.
 Everything is in the tray menu, under **Settings**. The window is 520 points
 wide and scrolls; the shot on the right shows the whole sheet.
 
-**Placement.** Where the pill sits along the right edge, and whether it follows
-the mouse from one display to another.
+**Appearance.** The theme, and whether times read as 24 h or AM / PM.
+
+**Placement.** Where the pill sits along the right edge, whether it follows the
+mouse from one display to another, and which screen it lives on when it does
+not.
 
 **Data.** How often to ask. Two minutes is the default because asking more often
 is what gets you rate limited, and these numbers do not move faster than that.
@@ -205,7 +238,7 @@ once a day and tells you when something is waiting, once per version, and never
 installs anything on its own.
 
 The part worth knowing: **an update that breaks the test suite is undone.**
-The commit you were on is recorded first, the 55 tests run before the restart,
+The commit you were on is recorded first, the 71 tests run before the restart,
 and a failure rolls the checkout back to where it was. A bad push upstream
 cannot leave you with a dead widget.
 
@@ -250,7 +283,7 @@ Useful commands:
 npm start                      # hover behaviour
 npm run demo                   # stays open, handy for positioning
 npm run usage                  # raw quotas as JSON, no interface
-npm test                       # 55 tests
+npm test                       # 71 tests
 tail ~/.claude-marge/widget.log   # one line per state change
 ```
 
@@ -258,13 +291,20 @@ tail ~/.claude-marge/widget.log   # one line per state change
 
 ## What is verified
 
-`npm test` runs 55 tests, covering the places where a mistake shows up
+`npm test` runs 71 tests, covering the places where a mistake shows up
 immediately.
 
-**Hover geometry, 14 tests.** The right edge of a multi-monitor setup, the
-window staying on screen whatever the number of models, and above all the
-absence of flicker: the area that keeps the widget open must always contain the
-strip that triggers it.
+**Hover geometry and displays, 22 tests.** The right edge of a multi-monitor
+setup, the seam between two screens never triggering, a chosen display that has
+been unplugged falling back to the primary, the window staying on screen
+whatever the number of models, and above all the absence of flicker: the area
+that keeps the widget open must always contain the strip that triggers it.
+
+**Themes and time format, 8 tests.** Every theme defines every surface and tone,
+an unknown one falls back rather than painting nothing, the four tones stay
+distinct so the gauges cannot lie, light themes use dark ink and dark themes
+light ink, and `auto` genuinely lets the locale decide instead of forcing a
+cycle.
 
 **Quota normalisation, 8 tests.** A missing quota never becomes a displayed
 zero, a model exposed twice by the API appears once, an empty response does not

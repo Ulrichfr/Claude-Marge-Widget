@@ -56,7 +56,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   gap: var(--row-gap, 26px);
-  box-shadow: -18px 0 48px rgba(0, 0, 0, 0.42);
+  box-shadow: -18px 0 48px var(--shadow, rgba(0, 0, 0, 0.42));
   opacity: 0;
   transform: translateX(104%);
   transition: transform 260ms var(--ease-out), opacity 180ms var(--ease-out);
@@ -105,7 +105,7 @@ html, body {
   transition: background 220ms linear;
 }
 
-.item.hot .ring-face { background: #2F2F33; }
+.item.hot .ring-face { background: var(--ring-face-hot, #2F2F33); }
 
 .ring > svg { position: absolute; inset: 0; transform: rotate(-90deg); }
 .ring .track { stroke: var(--track); }
@@ -144,7 +144,7 @@ html, body {
   background: var(--panel-bg);
   border-radius: 24px;
   padding: 18px 22px 20px;
-  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 26px 60px var(--shadow, rgba(0, 0, 0, 0.5));
   opacity: 0;
   transform: translateX(14px) scale(0.97);
   transform-origin: right center;
@@ -254,10 +254,15 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 
-.row.muted .row-name,
-.row.muted .row-foot { color: rgba(247, 247, 248, 0.62); }
+/* Dimming by opacity rather than by a fixed colour: a hardcoded white made the
+   unhovered rows vanish entirely on a light theme. */
+.row.muted { opacity: 0.6; }
 
-.panel-note.warn { color: rgba(233, 225, 31, 0.72); }
+.panel-note.warn { color: var(--warm); opacity: 0.85; }
+
+/* On a light theme the hairline has to darken, not lighten. */
+:root[data-light="true"] .row-badge { background: rgba(0, 0, 0, 0.07); }
+:root[data-light="true"] .panel-error.stale { border-top-color: rgba(0, 0, 0, 0.1); }
 
 .panel-error.stale {
   margin-top: 14px;
