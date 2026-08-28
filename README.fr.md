@@ -13,6 +13,7 @@ La souris touche le bord droit, il glisse. Elle s'en va, il disparaît.
 [![Linux](https://img.shields.io/badge/Linux-X11-000?logo=linux&logoColor=white)](#compatibilité)
 [![Node](https://img.shields.io/badge/Node-18%2B-000?logo=nodedotjs&logoColor=white)](#compatibilité)
 [![Licence](https://img.shields.io/badge/Licence-MIT-000)](LICENSE)
+[![Tests](https://github.com/Ulrichfr/Claude-Marge-Widget/actions/workflows/test.yml/badge.svg)](https://github.com/Ulrichfr/Claude-Marge-Widget/actions/workflows/test.yml)
 
 [English](README.md)
 
