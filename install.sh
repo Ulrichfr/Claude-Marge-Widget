@@ -125,6 +125,50 @@ else
   info "systemd user service installed: $UNIT"
 fi
 
+# --- Ways back in ------------------------------------------------------------
+# Quitting from the tray menu takes the tray icon with it. Without a launcher
+# and a command, the only way back would be a path nobody remembers.
+
+mkdir -p "$HOME/.local/bin"
+ln -sf "$APP_DIR/bin/marge" "$HOME/.local/bin/marge"
+info "Command installed: marge (start, stop, status, logs, update)"
+
+if [ "$OS" = mac ]; then
+  LAUNCHER="$HOME/Applications/Claude Marge.app"
+  mkdir -p "$LAUNCHER/Contents/MacOS"
+  cat > "$LAUNCHER/Contents/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>Claude Marge</string>
+  <key>CFBundleIdentifier</key><string>com.claudemarge.launcher</string>
+  <key>CFBundleExecutable</key><string>launch</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>LSBackgroundOnly</key><true/>
+</dict>
+</plist>
+PLIST
+  printf '#!/bin/sh\nexec "%s/bin/marge" start\n' "$APP_DIR" > "$LAUNCHER/Contents/MacOS/launch"
+  chmod +x "$LAUNCHER/Contents/MacOS/launch"
+  touch "$LAUNCHER"
+  info "Launcher installed: Claude Marge (Spotlight, or ~/Applications)"
+else
+  mkdir -p "$HOME/.local/share/applications"
+  cat > "$HOME/.local/share/applications/claude-marge.desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=Claude Marge
+Comment=Show the Claude usage widget
+Exec=$APP_DIR/bin/marge start
+Terminal=false
+Categories=Utility;
+DESKTOP
+  info "Launcher installed: Claude Marge (application menu)"
+fi
+
 # --- Did it find a token? -----------------------------------------------------
 # The widget's own log is the authority here. Asking the Keychain directly from
 # this script would report a false negative over SSH, where macOS refuses
@@ -153,4 +197,5 @@ case "$STATE" in
 esac
 echo
 info "Move your mouse to the right edge of the screen, halfway down."
+info "Closed it? Reopen it with the Claude Marge launcher, or type: marge"
 info "Uninstall: bash $APP_DIR/uninstall.sh"

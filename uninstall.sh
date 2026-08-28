@@ -12,6 +12,9 @@ else
   rm -f "$HOME/.config/systemd/user/claude-marge.service"
   systemctl --user daemon-reload 2>/dev/null || true
 fi
+rm -f "$HOME/.local/bin/marge"
+rm -rf "$HOME/Applications/Claude Marge.app"
+rm -f "$HOME/.local/share/applications/claude-marge.desktop"
 pkill -f "claude-marge" 2>/dev/null || true
 rm -rf "$APP_DIR" "$HOME/.config/claude-marge"
 echo "Claude Marge Widget removed. Your Claude credentials were never touched."

@@ -293,8 +293,18 @@ cd ~/.claude-marge && git pull && npm install && npm test
 | Reveal the config file | Open `config.json` in your editor. |
 | Quit | Really quits. The login item restarts the widget after a crash, never after a deliberate quit. |
 
-Closed it and want it back? `launchctl kickstart gui/$(id -u)/com.claudemarge.widget`
-on macOS, `systemctl --user start claude-marge` on Linux.
+**Closed it and want it back?** Quitting takes the tray icon with it, so the
+installer leaves two ways in. On macOS, a **Claude Marge** launcher in
+`~/Applications`, which Spotlight finds by name; on Linux, an entry in the
+application menu. And on both, a command:
+
+```bash
+marge            # start it, or restart it if it is already running
+marge stop       # quit it until the next login
+marge status     # is it running, and what did it last read
+marge logs       # follow the log
+marge update     # pull, install, test, restart
+```
 
 ### The file
 

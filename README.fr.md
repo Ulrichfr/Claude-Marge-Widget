@@ -309,9 +309,18 @@ cd ~/.claude-marge && git pull && npm install && npm test
 | Montrer le fichier de configuration | Ouvre `config.json` dans ton éditeur. |
 | Quitter | Quitte vraiment. Le démarrage automatique relance après un plantage, jamais après un « Quitter » volontaire. |
 
-Tu l'as fermé et tu le veux de retour ?
-`launchctl kickstart gui/$(id -u)/com.claudemarge.widget` sur macOS,
-`systemctl --user start claude-marge` sur Linux.
+**Tu l'as fermé et tu le veux de retour ?** Quitter emporte l'icône de la barre
+d'état avec lui, donc l'installeur laisse deux portes. Sur macOS, un lanceur
+**Claude Marge** dans `~/Applications`, que Spotlight trouve par son nom ; sur
+Linux, une entrée dans le menu des applications. Et sur les deux, une commande :
+
+```bash
+marge            # le lance, ou le relance s'il tourne déjà
+marge stop       # le quitte jusqu'à la prochaine session
+marge status     # tourne-t-il, et qu'a-t-il lu en dernier
+marge logs       # suit le journal
+marge update     # récupère, installe, teste, relance
+```
 
 ### Le fichier
 

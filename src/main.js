@@ -18,7 +18,7 @@ const fs = require('fs');
 const os = require('os');
 const { fetchUsage } = require('./usage');
 const I18N = require('./i18n');
-const { nextDelay, shouldRefreshOnReveal } = require('./schedule');
+const { nextDelay, shouldRefreshOnReveal, adjustFloor } = require('./schedule');
 const autostart = require('./autostart');
 const store = require('./state');
 const alerts = require('./alerts');
@@ -101,6 +101,8 @@ let inFlight = false;
 let pinned = false;       // pill stays out; the panel still follows the cursor
 let panelOpen = false;
 let alertLedger = store.read().alerts || {};
+let floorSeconds = store.read().floorSeconds || 0;  // the pace this account sustains
+let cleanReads = 0;
 if (lastGood) lastData = { ...lastGood, stale: true, reason: 'loading' };
 let ready = false; // the page finished loading and is listening
 let currentDisplayId = null;
@@ -332,6 +334,15 @@ function poll() {
 
 // --- Data -------------------------------------------------------------------
 
+/** Nobody at the keyboard means the numbers can wait. */
+function idleSeconds() {
+  try { return powerMonitor.getSystemIdleTime(); } catch (_) { return 0; }
+}
+
+function pacing() {
+  return { idleSeconds: idleSeconds(), floorSeconds };
+}
+
 /** One log line per state change, never one per minute. */
 let lastLogged = null;
 function logState(data) {
@@ -339,7 +350,7 @@ function logState(data) {
   const state = data.ok
     ? `ok ${(data.gauges || []).map(describe).join(', ')}`
     : `failed ${data.reason} (attempt ${failures}, next try in ` +
-      `${Math.round(nextDelay(data, failures, config.refreshSeconds) / 1000)}s)`;
+      `${Math.round(nextDelay(data, failures, config.refreshSeconds, pacing()) / 1000)}s)`;
   if (state === lastLogged) return;
   lastLogged = state;
   console.log(`[${new Date().toISOString()}] ${state}`);
@@ -362,17 +373,30 @@ async function refresh() {
 
   if (data.ok) {
     failures = 0;
+    cleanReads += 1;
     lastGood = data;
     lastData = data;
     raiseAlerts(data.gauges);
-    store.save({ lastGood: data, failures: 0, alerts: alertLedger });
   } else {
+    cleanReads = 0;
     failures += 1;
     lastData = lastGood
       ? { ...lastGood, stale: true, reason: data.reason, checkedAt: data.fetchedAt }
       : data;
-    store.save({ failures });
   }
+
+  const previousFloor = floorSeconds;
+  floorSeconds = adjustFloor(floorSeconds, data, config.refreshSeconds, cleanReads);
+  if (floorSeconds !== previousFloor) {
+    trace(`pace now one call every ${floorSeconds}s (was ${previousFloor || config.refreshSeconds}s)`);
+    if (floorSeconds < previousFloor) cleanReads = 0;
+  }
+  store.save({
+    failures,
+    floorSeconds,
+    alerts: alertLedger,
+    ...(data.ok ? { lastGood: data } : {})
+  });
 
   logState(data);
   if (data.ok && data.gauges.length) setRows(data.gauges.length);
@@ -380,7 +404,7 @@ async function refresh() {
   updateTrayTitle();
 
   clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(refresh, nextDelay(data, failures, config.refreshSeconds));
+  refreshTimer = setTimeout(refresh, nextDelay(data, failures, config.refreshSeconds, pacing()));
 }
 
 function updateTrayTitle() {
@@ -593,7 +617,8 @@ function applyConfig(next) {
   buildMenu();
   scheduleUpdateCheck();
   clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(refresh, nextDelay({ ok: failures === 0 }, failures, config.refreshSeconds));
+  refreshTimer = setTimeout(refresh,
+    nextDelay({ ok: failures === 0 }, failures, config.refreshSeconds, pacing()));
 }
 
 // --- Lifecycle --------------------------------------------------------------
@@ -623,7 +648,14 @@ app.whenReady().then(() => {
   pollTimer = setInterval(poll, pollRate);
   registerShortcut();
   // Waking from sleep with hours-old numbers is worse than one extra call.
-  powerMonitor.on('resume', () => { failures = 0; refresh(); });
+  // Asleep or locked, there is nobody to read the widget and the account is
+  // shared with every other machine: stop asking entirely.
+  for (const event of ['suspend', 'lock-screen']) {
+    powerMonitor.on(event, () => { trace(`${event}: pausing`); clearTimeout(refreshTimer); });
+  }
+  for (const event of ['resume', 'unlock-screen']) {
+    powerMonitor.on(event, () => { trace(`${event}: resuming`); failures = 0; refresh(); });
+  }
   for (const event of ['display-added', 'display-removed', 'display-metrics-changed']) {
     screen.on(event, onDisplaysChanged);
   }
