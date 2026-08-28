@@ -104,6 +104,7 @@ function applyTheme() {
 }
 
 function applyGeometry() {
+  ringCentres = [];
   const root = document.documentElement.style;
   root.setProperty('--pill-w', `${geo.pillWidth}px`);
   root.setProperty('--ring', `${geo.ring}px`);
@@ -213,6 +214,7 @@ function render() {
     panelRows.appendChild(why);
   }
 
+  ringCentres = [];      // the layout just changed, measure again on demand
   if (revealed) animateIn();
 }
 
@@ -263,14 +265,26 @@ function setHot(index) {
   placeTail(index);
 }
 
+/* Ring centres, measured once per layout instead of on every pointer sample.
+   Reading getBoundingClientRect twenty-five times a second forces the browser
+   to recompute layout just as often, for values that do not move. */
+let ringCentres = [];
+
+function measureRings() {
+  ringCentres = items.map((it) => {
+    const b = it.el.getBoundingClientRect();
+    return b.top + b.height / 2;
+  });
+}
+
 /** Nearest ring to the pointer, vertically. */
 function onCursor(p) {
   if (!revealed || !items.length) return;
+  if (ringCentres.length !== items.length) measureRings();
   let best = 0;
   let bestDist = Infinity;
-  items.forEach((it, i) => {
-    const b = it.el.getBoundingClientRect();
-    const d = Math.abs(p.y - (b.top + b.height / 2));
+  ringCentres.forEach((centre, i) => {
+    const d = Math.abs(p.y - centre);
     if (d < bestDist) { bestDist = d; best = i; }
   });
   setHot(best);

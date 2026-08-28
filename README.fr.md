@@ -5,6 +5,8 @@
 **Tes limites d'usage Claude, Pro et Max, au bord de l'écran.**
 La souris touche le bord droit, il glisse. Elle s'en va, il disparaît.
 
+<img src="docs/reveal.gif" alt="La souris atteint le bord droit, le widget glisse avec ses anneaux qui se remplissent, puis repart" width="720">
+
 <img src="docs/hero.png" alt="Le widget ouvert au bord droit de l'écran, avec la session, la semaine et les limites par modèle" width="820">
 
 [![macOS](https://img.shields.io/badge/macOS-12%2B-000?logo=apple&logoColor=white)](#compatibilité)

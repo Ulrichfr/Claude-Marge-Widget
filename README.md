@@ -5,6 +5,8 @@
 **Your Claude usage limits, Pro and Max, at the edge of the screen.**
 Touch the right edge with your mouse and it slides in. Move away and it is gone.
 
+<img src="docs/reveal.gif" alt="The mouse reaches the right edge, the widget slides in with its rings filling, then leaves" width="720">
+
 <img src="docs/hero.png" alt="The widget revealed at the right edge of the screen, showing session, weekly and per-model limits" width="820">
 
 [![macOS](https://img.shields.io/badge/macOS-12%2B-000?logo=apple&logoColor=white)](#compatibility)

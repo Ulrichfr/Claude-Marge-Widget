@@ -175,7 +175,9 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      backgroundThrottling: false
+      // Throttled while hidden, full speed while shown: setBackgroundThrottling
+      // is flipped on reveal, so the entry animation never stutters.
+      backgroundThrottling: true
     }
   });
   currentDisplayId = display.id;
@@ -253,6 +255,7 @@ function show() {
   if (!win || win.isDestroyed() || visible) return;
   visible = true;
   clearTimeout(hideTimer);
+  win.webContents.setBackgroundThrottling(false);
   win.showInactive();
   if (ready) win.webContents.send('reveal', true);
   if (!pinned) setPanel(true);
@@ -268,7 +271,11 @@ function scheduleHide() {
     setPanel(false);
     if (ready) win.webContents.send('reveal', false);
     // Let the exit animation play before hiding the window.
-    setTimeout(() => { if (!visible && win) win.hide(); }, 320);
+    setTimeout(() => {
+      if (visible || !win || win.isDestroyed()) return;
+      win.hide();
+      win.webContents.setBackgroundThrottling(true);
+    }, 320);
   }, G.hideGrace);
 }
 
@@ -292,9 +299,12 @@ function sendCursor(cursor) {
  * runs at two speeds: lazily while nothing is on screen, and smoothly once the
  * widget is out. Same behaviour, a third of the wake-ups.
  */
-const POLL_IDLE = 140;
-const POLL_LIVE = 40;
-let pollRate = POLL_IDLE;
+const POLL_FAR = 320;    // the pointer is nowhere near the edge
+const POLL_NEAR = 45;    // approaching: sample as finely as when it is open,
+                         // or a fast hand could cross the 4 px strip unseen
+const POLL_LIVE = 40;    // the widget is out, the hover has to feel smooth
+const NEAR_EDGE = 220;   // how close counts as approaching
+let pollRate = POLL_FAR;
 function setPollRate(ms) {
   if (ms === pollRate) return;
   pollRate = ms;
@@ -304,9 +314,19 @@ function setPollRate(ms) {
 
 function poll() {
   if (!win || win.isDestroyed()) return;
-  setPollRate(visible || pinned ? POLL_LIVE : POLL_IDLE);
   const cursor = screen.getCursorScreenPoint();
   const all = screen.getAllDisplays();
+
+  // Sampling the pointer is the only thing this process does all day. Three
+  // speeds: barely, while the mouse is off in the middle of the screen; more
+  // attentively as it approaches the edge; and smoothly once the widget is out.
+  if (visible || pinned) {
+    setPollRate(POLL_LIVE);
+  } else {
+    const display = screen.getDisplayNearestPoint(cursor);
+    const edge = display.workArea.x + display.workArea.width;
+    setPollRate(edge - cursor.x <= NEAR_EDGE ? POLL_NEAR : POLL_FAR);
+  }
 
   if (pinned) {
     cancelHide();
