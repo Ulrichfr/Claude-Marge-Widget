@@ -37,7 +37,7 @@ const DEMO = process.env.MARGE_DEMO === '1' || process.argv.includes('--demo');
 const CONFIG_PATH = path.join(os.homedir(), '.config', 'claude-marge', 'config.json');
 const DEFAULTS = {
   verticalAnchor: 0.45,   // 0 = top of the screen, 1 = bottom
-  refreshSeconds: 120,
+  refreshSeconds: 300,
   followCursorDisplay: true, // show up on whichever display holds the cursor
   displayId: 'primary',      // used when the widget does not follow the mouse
   language: 'auto',          // 'auto', or one of the codes in src/i18n.js

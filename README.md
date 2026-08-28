@@ -145,7 +145,7 @@ menu.
 ```json
 {
   "verticalAnchor": 0.45,
-  "refreshSeconds": 120,
+  "refreshSeconds": 300,
   "followCursorDisplay": true,
   "alertAt": [80, 95],
   "shortcut": "CommandOrControl+Shift+M",
@@ -220,8 +220,12 @@ wide and scrolls; the shot on the right shows the whole sheet.
 mouse from one display to another, and which screen it lives on when it does
 not.
 
-**Data.** How often to ask. Two minutes is the default because asking more often
-is what gets you rate limited, and these numbers do not move faster than that.
+**Data.** How often to ask. Five minutes is the default: these numbers move
+slowly, and every machine signed into your account asks separately, so two
+laptops at two minutes is already 1440 calls a day. The widget also stops asking
+when the machine sleeps or the screen locks, asks four times less often after
+five idle minutes, and if the account ever refuses, it slows down for good and
+only speeds back up after five clean reads.
 
 **Alerts.** Which marks should warn you before the ceiling. Each one speaks once
 per quota per reset window, so a limit you are already sitting above does not

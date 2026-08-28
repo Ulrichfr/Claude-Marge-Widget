@@ -151,7 +151,7 @@ d'état :
 ```json
 {
   "verticalAnchor": 0.45,
-  "refreshSeconds": 120,
+  "refreshSeconds": 300,
   "followCursorDisplay": true,
   "alertAt": [80, 95],
   "shortcut": "CommandOrControl+Shift+M",
@@ -232,9 +232,13 @@ points de large et défile ; la capture de droite montre le panneau entier.
 souris d'un écran à l'autre, et sur quel écran elle vit quand ce n'est pas le
 cas.
 
-**Données.** À quelle fréquence interroger. Deux minutes par défaut, parce que
-demander plus souvent est exactement ce qui vaut un refus, et que ces chiffres
-ne bougent pas plus vite que ça.
+**Données.** À quelle fréquence interroger. Cinq minutes par défaut : ces
+chiffres bougent lentement, et chaque machine connectée à ton compte interroge
+de son côté, donc deux portables à deux minutes font déjà 1 440 appels par jour.
+Le widget cesse aussi d'interroger quand la machine dort ou que l'écran se
+verrouille, espace ses appels quatre fois après cinq minutes d'inactivité, et si
+le compte refuse, il ralentit durablement et ne réaccélère qu'après cinq
+lectures propres.
 
 **Alertes.** Quels seuils doivent te prévenir avant le plafond. Chacun parle une
 fois par quota et par fenêtre de reset, pour qu'une limite que tu dépasses déjà

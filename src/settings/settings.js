@@ -3,7 +3,7 @@
    Nothing is applied behind the user's back except Start at login, which is a
    system registration rather than a value in the file. */
 
-const INTERVALS = [1, 2, 5, 10];          // minutes
+const INTERVALS = [2, 5, 10, 15];         // minutes
 const TIME_FORMATS = ['auto', '24', '12'];
 const THRESHOLDS = [50, 70, 80, 90, 95];  // offered marks
 
@@ -120,7 +120,7 @@ function paint() {
   $('displayRow').hidden = follows || displays.length < 2;
   $('displayId').value = draft.displayId || 'primary';
 
-  const minutes = Math.round((draft.refreshSeconds || 120) / 60);
+  const minutes = Math.round((draft.refreshSeconds || 300) / 60);
   [...$('interval').children].forEach((b) =>
     b.setAttribute('aria-pressed', Number(b.dataset.value) === minutes ? 'true' : 'false'));
 
