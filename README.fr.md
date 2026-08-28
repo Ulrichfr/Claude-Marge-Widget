@@ -215,7 +215,7 @@ principal, au lieu d'être dessiné hors du bureau où tu ne le reverrais jamais
 
 ### Les réglages
 
-<img src="docs/settings-fr.png" alt="La fenêtre de réglages : placement, données, alertes, système et mises à jour" width="330" align="right">
+<img src="docs/settings-fr.png" alt="La fenêtre de réglages : apparence, placement, données, alertes, système et mises à jour" width="290" align="right">
 
 Tout est dans le menu de la barre d'état, sous **Réglages**. La fenêtre fait 520
 points de large et défile ; la capture de droite montre le panneau entier.

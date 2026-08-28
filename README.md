@@ -203,7 +203,7 @@ drawn off the desktop, where you would never see it again.
 
 ### Settings
 
-<img src="docs/settings.png" alt="The settings window: placement, data, alerts, system and updates" width="330" align="right">
+<img src="docs/settings.png" alt="The settings window: appearance, placement, data, alerts, system and updates" width="290" align="right">
 
 Everything is in the tray menu, under **Settings**. The window is 520 points
 wide and scrolls; the shot on the right shows the whole sheet.

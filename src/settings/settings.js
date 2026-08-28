@@ -183,12 +183,18 @@ function buildControls() {
   $('themes').innerHTML = '';
   for (const id of THEMES.ids) {
     const t = THEMES.get(id);
+    // A translucent theme shown over a flat square shows nothing at all, so its
+    // preview gets something worth seeing through.
+    const translucent = !t.panel.startsWith('#');
+    const behind = translucent
+      ? 'linear-gradient(135deg, #ff5f6d 0%, #ffc371 28%, #24c6dc 62%, #514a9d 100%)'
+      : t.ui.bg;
     const b = document.createElement('button');
     b.className = 'swatch';
     b.dataset.value = id;
     b.title = t.name;
     b.innerHTML = `
-      <span class="preview" style="background:${t.ui.bg}">
+      <span class="preview" style="background:${behind}">
         <span class="sheetlet" style="background:${t.panel}"></span>
         <span class="tones">
           <i style="background:${t.ok}"></i><i style="background:${t.warm}"></i>
