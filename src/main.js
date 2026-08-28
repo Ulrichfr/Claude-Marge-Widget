@@ -224,8 +224,10 @@ const MENU = I18N.pick(app.getLocale()).menu;
 const IDLE_LABEL = 'Claude Marge';
 
 function createTray() {
-  const iconPath = path.join(__dirname, 'renderer', 'tray.png');
-  let image = nativeImage.createFromPath(iconPath);
+  // macOS reads tray.png as 16 points and picks up tray@2x.png on its own.
+  // Linux panels want a bigger bitmap, so they get their own file.
+  const iconFile = process.platform === 'darwin' ? 'tray.png' : 'tray-linux.png';
+  let image = nativeImage.createFromPath(path.join(__dirname, 'renderer', iconFile));
   if (image.isEmpty()) image = nativeImage.createEmpty();
   if (process.platform === 'darwin') image.setTemplateImage(true);
   try {
