@@ -76,20 +76,30 @@ else
 fi
 
 # --- Did it find a token? -----------------------------------------------------
+# The widget's own log is the authority here. Asking the Keychain directly from
+# this script would report a false negative over SSH, where macOS refuses
+# Keychain reads outside a GUI session, even though the widget reads it fine.
 echo
-sleep 4
-STATE="$( cd "$APP_DIR" && node src/usage.js 2>/dev/null | node -e '
+sleep 6
+STATE=""
+LOG="$APP_DIR/widget.log"
+[ -f "$LOG" ] && STATE="$(grep -o 'ok .*' "$LOG" | tail -1 || true)"
+
+if [ -z "$STATE" ]; then
+  STATE="$( cd "$APP_DIR" && node src/usage.js 2>/dev/null | node -e '
 let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{
   try{const d=JSON.parse(s);
-    console.log(d.ok ? "ok "+d.gauges.map(g=>g.title+" "+g.percent+"%").join(", ") : "none "+d.reason);
-  }catch(e){console.log("none unreadable")}})' )"
+    if(d.ok) console.log("ok "+d.gauges.map(g=>(g.model||g.kind)+" "+g.percent+"%").join(", "));
+  }catch(e){}})' )"
+fi
 
 bold "Installed."
 case "$STATE" in
   ok*) info "Reading your real limits: ${STATE#ok }" ;;
-  *)   info "No Claude session found yet on this machine."
+  *)   info "No Claude session detected yet."
        info "Run 'claude' once in a terminal and sign in. The widget picks it up"
-       info "within a minute, no restart needed." ;;
+       info "within a minute, no restart needed."
+       info "Already signed in? Check $LOG in a moment." ;;
 esac
 echo
 info "Move your mouse to the right edge of the screen, halfway down."
