@@ -185,9 +185,23 @@ function poll() {
 
 // --- Donnees ----------------------------------------------------------------
 
+/** Une ligne de journal par changement d'etat, jamais a chaque minute. */
+let lastLogged = null;
+function logState(data) {
+  const session = (data.gauges || []).find((g) => g.id === 'session');
+  const state = data.ok
+    ? `ok ${(data.gauges || []).map((g) => `${g.title} ${g.percent}%`).join(', ')}`
+    : `echec ${data.reason}`;
+  if (state === lastLogged) return;
+  lastLogged = state;
+  console.log(`[${new Date().toISOString()}] ${state}`);
+  if (session) { /* la valeur sert aussi au titre de la barre d'etat */ }
+}
+
 async function refresh() {
   const data = await fetchUsage();
   lastData = data;
+  logState(data);
   if (data.ok && data.gauges.length) setRows(data.gauges.length);
   if (win && !win.isDestroyed()) win.webContents.send('usage', data);
   updateTrayTitle();

@@ -17,21 +17,25 @@ const { execFileSync } = require('child_process');
 const API_HOST = 'api.anthropic.com';
 const API_PATH = '/api/oauth/usage';
 const CRED_FILE = path.join(os.homedir(), '.claude', '.credentials.json');
-const KEYCHAIN_SERVICE = 'Claude Code';
+// Le nom du service a change selon les versions de Claude Code. On essaie le
+// nom actuel puis l'ancien, plutot que de supposer lequel tourne sur la machine.
+const KEYCHAIN_SERVICES = ['Claude Code-credentials', 'Claude Code'];
 
 /** Lit les identifiants Claude Code. macOS : Trousseau. Ailleurs : fichier. */
 function readCredentials() {
   if (process.platform === 'darwin') {
-    try {
-      const raw = execFileSync('security', [
-        'find-generic-password', '-a', os.userInfo().username, '-w', '-s', KEYCHAIN_SERVICE
-      ], { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] });
-      const parsed = JSON.parse(raw.trim());
-      if (parsed && parsed.claudeAiOauth) return parsed.claudeAiOauth;
-    } catch (_) {
-      // Pas d'entree, trousseau verrouille, ou Claude Code jamais connecte sur
-      // cette machine : on retombe silencieusement sur le fichier. Le message
-      // de `security` est etouffe, il n'apprend rien et pollue le journal.
+    for (const service of KEYCHAIN_SERVICES) {
+      try {
+        const raw = execFileSync('security', [
+          'find-generic-password', '-a', os.userInfo().username, '-w', '-s', service
+        ], { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] });
+        const parsed = JSON.parse(raw.trim());
+        if (parsed && parsed.claudeAiOauth) return parsed.claudeAiOauth;
+      } catch (_) {
+        // Pas d'entree sous ce nom, trousseau verrouille, ou lecture refusee
+        // hors session graphique : on essaie le nom suivant, puis le fichier.
+        // Le message de `security` est etouffe, il n'apprend rien.
+      }
     }
   }
   try {

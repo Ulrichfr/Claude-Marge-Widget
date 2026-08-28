@@ -14,9 +14,22 @@ De l'endpoint officiel utilisé par Claude Code lui-même :
 
     GET https://api.anthropic.com/api/oauth/usage
 
-Le jeton OAuth est lu là où Claude Code le range : le Trousseau sur macOS
-(service `Claude Code`), `~/.claude/.credentials.json` ailleurs. Il n'est ni
-copié, ni mis en cache sur disque, ni envoyé ailleurs qu'à `api.anthropic.com`.
+Le jeton OAuth est lu là où Claude Code le range : le Trousseau sur macOS,
+`~/.claude/.credentials.json` ailleurs. Il n'est ni copié, ni mis en cache sur
+disque, ni envoyé ailleurs qu'à `api.anthropic.com`.
+
+Le nom du service Trousseau a changé selon les versions : le widget essaie
+`Claude Code-credentials` (Claude Code 2.1 et suivants) puis `Claude Code`,
+avant de se rabattre sur le fichier.
+
+Une lecture du Trousseau **échoue depuis SSH**, quel que soit le nom : macOS
+refuse l'accès hors session graphique. Ce n'est pas un défaut du widget, qui
+tourne lui dans la session de l'utilisateur. Pour vérifier son état à distance,
+lire son journal plutôt que tenter la lecture soi-même :
+
+    tail /tmp/claude-usage.log
+
+Il n'écrit une ligne qu'au changement d'état, jamais à chaque minute.
 
 Le widget ne renouvelle jamais le jeton lui-même : faire tourner le jeton de
 rafraîchissement invaliderait la session de Claude Code. Quand il a expiré, le
