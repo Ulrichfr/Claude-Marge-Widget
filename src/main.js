@@ -354,6 +354,7 @@ function logState(data) {
   if (state === lastLogged) return;
   lastLogged = state;
   console.log(`[${new Date().toISOString()}] ${state}`);
+  if (!data.ok && data.detail) console.log(`  server said: ${data.detail}`);
 }
 
 /**

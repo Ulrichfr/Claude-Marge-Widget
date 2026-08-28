@@ -64,8 +64,11 @@ function httpsGetJson(token) {
       res.on('data', (c) => { body += c; });
       res.on('end', () => {
         if (res.statusCode !== 200) {
+          // What the server actually said. Without it, every failure looks the
+          // same from the log, and "rate limited" can hide something else.
           const err = new Error(`HTTP ${res.statusCode}`);
           err.status = res.statusCode;
+          err.body = body.slice(0, 300);
           // The endpoint tells us how long to wait when it throttles us.
           const after = parseInt(res.headers['retry-after'], 10);
           if (Number.isFinite(after)) err.retryAfter = after;
@@ -210,7 +213,7 @@ async function fetchUsage() {
       ok: false,
       reason: reasonFor(err),
       retryAfter: err.retryAfter,
-      detail: err.message,
+      detail: err.body ? `${err.message} ${err.body}` : err.message,
       fetchedAt: Date.now(),
       gauges: []
     };
