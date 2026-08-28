@@ -139,10 +139,17 @@ menu.
 ```json
 {
   "verticalAnchor": 0.45,
-  "refreshSeconds": 60,
-  "followCursorDisplay": true
+  "refreshSeconds": 120,
+  "followCursorDisplay": true,
+  "alertAt": [80, 95],
+  "shortcut": "CommandOrControl+Shift+M"
 }
 ```
+
+`alertAt` raises a desktop notification when a quota crosses one of those marks:
+once per level, per quota, per reset window, so a limit you are sitting above
+does not notify you every two minutes. Set it to `[]` to stay silent.
+`shortcut` toggles the pinned view; set it to `""` to register nothing.
 
 ### The tray menu
 
@@ -151,6 +158,7 @@ menu.
 | Refresh now | Ask the API immediately, whatever the schedule says. |
 | Show for 3 seconds | Reveal the widget without reaching for the edge. |
 | **Start at login** | Checkbox. Turning it off leaves the running widget alone, it simply will not come back at your next login. |
+| **Keep visible** | Pin the widget open, no hovering. Also on a global shortcut, `Cmd/Ctrl+Shift+M` by default. |
 | **Restart the widget** | Relaunch through the supervisor, handy after a config change. |
 | Open configuration | Reveal `config.json` in the file manager. |
 | Reload configuration | Apply the file without restarting. |
@@ -172,7 +180,7 @@ Useful commands:
 npm start                      # hover behaviour
 npm run demo                   # stays open, handy for positioning
 npm run usage                  # raw quotas as JSON, no interface
-npm test                       # 30 tests
+npm test                       # 45 tests
 tail ~/.claude-marge/widget.log   # one line per state change
 ```
 
@@ -180,7 +188,8 @@ tail ~/.claude-marge/widget.log   # one line per state change
 
 ## What is verified
 
-`npm test` covers the two places where a mistake shows up immediately.
+`npm test` runs 45 tests, covering the places where a mistake shows up
+immediately.
 
 **Hover geometry, 14 tests.** The right edge of a multi-monitor setup, the
 window staying on screen whatever the number of models, and above all the
@@ -191,6 +200,14 @@ strip that triggers it.
 zero, a model exposed twice by the API appears once, an empty response does not
 bring the widget down, and a failure is named for what it is rather than blamed
 on the network.
+
+**Alerts, 8 tests.** Crossing a threshold speaks once, staying above it stays
+quiet, the next level up speaks again, a new reset window arms it afresh, and
+the ledger forgets quotas the account stopped exposing.
+
+**Persisted state, 7 tests.** The failure count and the last real reading
+survive a restart, a reading older than a day is dropped rather than shown as
+current, and a corrupted state file does not bring the widget down.
 
 **Backoff, 8 tests.** Asking too often is what earns an HTTP 429, so the widget
 polls every two minutes, doubles the wait after each failure up to fifteen

@@ -145,10 +145,18 @@ d'état :
 ```json
 {
   "verticalAnchor": 0.45,
-  "refreshSeconds": 60,
-  "followCursorDisplay": true
+  "refreshSeconds": 120,
+  "followCursorDisplay": true,
+  "alertAt": [80, 95],
+  "shortcut": "CommandOrControl+Shift+M"
 }
 ```
+
+`alertAt` déclenche une notification quand un quota franchit l'un de ces seuils :
+une fois par seuil, par quota et par fenêtre de reset, pour qu'une limite que tu
+dépasses déjà ne te prévienne pas toutes les deux minutes. Mets `[]` pour le
+silence complet. `shortcut` bascule l'épinglage ; mets `""` pour n'enregistrer
+aucun raccourci.
 
 ### Le menu de la barre d'état
 
@@ -157,6 +165,7 @@ d'état :
 | Rafraîchir maintenant | Interroge l'API tout de suite, quel que soit le rythme prévu. |
 | Afficher 3 secondes | Montre le widget sans aller chercher le bord. |
 | **Lancer au démarrage** | Case à cocher. La décocher laisse tourner le widget en cours, il ne reviendra simplement pas à ta prochaine session. |
+| **Garder visible** | Épingle le widget ouvert, sans survol. Aussi sur un raccourci global, `Cmd/Ctrl+Maj+M` par défaut. |
 | **Relancer le widget** | Redémarre par le superviseur, pratique après un changement de configuration. |
 | Ouvrir la configuration | Montre `config.json` dans le gestionnaire de fichiers. |
 | Recharger la configuration | Applique le fichier sans redémarrer. |
@@ -179,7 +188,7 @@ Commandes utiles :
 npm start                         # comportement au survol
 npm run demo                      # reste ouvert, pratique pour régler la position
 npm run usage                     # les quotas bruts en JSON, sans interface
-npm test                          # 30 tests
+npm test                          # 45 tests
 tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 ```
 
@@ -187,7 +196,7 @@ tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 
 ## Ce qui est vérifié
 
-`npm test` couvre les deux endroits où une erreur se voit tout de suite.
+`npm test` lance 45 tests, sur les endroits où une erreur se voit tout de suite.
 
 **La géométrie du survol, 14 tests.** Le bord droit en multi-écrans, la fenêtre
 qui reste dans l'écran quel que soit le nombre de modèles, et surtout l'absence
@@ -198,6 +207,15 @@ bande qui le déclenche.
 zéro affiché, un modèle exposé deux fois par l'API n'apparaît qu'une fois, une
 réponse vide ne fait pas tomber le widget, et une panne est nommée pour ce
 qu'elle est au lieu d'être mise sur le dos du réseau.
+
+**Les alertes, 8 tests.** Franchir un seuil parle une fois, rester au-dessus se
+tait, le seuil supérieur reparle, une nouvelle fenêtre de reset réarme, et le
+registre oublie les quotas que le compte n'expose plus.
+
+**L'état persisté, 7 tests.** Le compteur d'échecs et la dernière vraie lecture
+survivent à un redémarrage, une lecture de plus d'un jour est écartée plutôt
+qu'affichée comme actuelle, et un fichier d'état corrompu ne fait pas tomber le
+widget.
 
 **Le ralentissement, 8 tests.** Interroger trop souvent, c'est exactement ce qui
 vaut un HTTP 429 : le widget interroge toutes les deux minutes, double l'attente

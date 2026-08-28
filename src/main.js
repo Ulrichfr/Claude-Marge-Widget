@@ -9,7 +9,10 @@
  * behaves the same on macOS and on X11.
  */
 
-const { app, BrowserWindow, screen, Tray, Menu, nativeImage, ipcMain, shell } = require('electron');
+const {
+  app, BrowserWindow, screen, Tray, Menu, nativeImage, ipcMain, shell,
+  Notification, globalShortcut, powerMonitor
+} = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -17,6 +20,8 @@ const { fetchUsage } = require('./usage');
 const I18N = require('./i18n');
 const { nextDelay, shouldRefreshOnReveal } = require('./schedule');
 const autostart = require('./autostart');
+const store = require('./state');
+const alerts = require('./alerts');
 const {
   G, layout, boundsForDisplay: computeBounds,
   isOuterRightEdge, inHotZone, insideKeepAlive
@@ -32,7 +37,9 @@ const CONFIG_PATH = path.join(os.homedir(), '.config', 'claude-marge', 'config.j
 const DEFAULTS = {
   verticalAnchor: 0.45,   // 0 = top of the screen, 1 = bottom
   refreshSeconds: 120,
-  followCursorDisplay: true  // show up on whichever display holds the cursor
+  followCursorDisplay: true, // show up on whichever display holds the cursor
+  alertAt: [80, 95],         // notify once when a quota crosses these marks
+  shortcut: 'CommandOrControl+Shift+M' // toggle pinned mode; '' disables it
 };
 
 function loadConfig() {
@@ -44,6 +51,27 @@ function loadConfig() {
 }
 let config = loadConfig();
 
+/** Reveal needs something to reveal: write the defaults on first use. */
+function ensureConfigFile() {
+  try {
+    if (!fs.existsSync(CONFIG_PATH)) {
+      fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
+      fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2) + '\n');
+    }
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function openConfig() {
+  if (!ensureConfigFile()) return;
+  // openPath hands it to the default editor; if nothing is associated with
+  // .json it returns a message, and revealing the folder is the fallback.
+  const problem = await shell.openPath(CONFIG_PATH);
+  if (problem) shell.showItemInFolder(CONFIG_PATH);
+}
+
 let win = null;
 let tray = null;
 let visible = false;
@@ -51,9 +79,12 @@ let hideTimer = null;
 let pollTimer = null;
 let refreshTimer = null;
 let lastData = { ok: false, reason: 'loading', gauges: [] };
-let lastGood = null;      // the last answer that actually carried numbers
-let failures = 0;         // consecutive failures, drives the backoff
+let lastGood = store.restoreLastGood();  // survives a restart, so no blank pill
+let failures = store.restoreFailures();  // survives a restart, so no lost backoff
 let inFlight = false;
+let pinned = false;       // stays open regardless of the cursor
+let alertLedger = store.read().alerts || {};
+if (lastGood) lastData = { ...lastGood, stale: true, reason: 'loading' };
 let ready = false; // the page finished loading and is listening
 let currentDisplayId = null;
 
@@ -69,7 +100,7 @@ function activeDisplay() {
 }
 
 function placeOn(display) {
-  if (!win) return;
+  if (!win || win.isDestroyed()) return;
   currentDisplayId = display.id;
   win.setBounds(boundsForDisplay(display));
 }
@@ -107,7 +138,16 @@ function createWindow() {
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   win.setIgnoreMouseEvents(true); // never steal a click, never take focus
 
-  win.on('closed', () => trace('window closed'));
+  win.on('closed', () => {
+    trace('window closed');
+    // Teardown order matters: the cursor poll keeps firing between the window
+    // being destroyed and the quit handler running, and touching a destroyed
+    // window throws.
+    win = null;
+    ready = false;
+    clearInterval(pollTimer);
+    clearTimeout(refreshTimer);
+  });
   win.webContents.on('render-process-gone', (_e, d) => trace(`renderer gone: ${d.reason}`));
   win.webContents.on('unresponsive', () => trace('renderer unresponsive'));
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
@@ -147,7 +187,7 @@ function setRows(n) {
 // --- Reveal and hide --------------------------------------------------------
 
 function show() {
-  if (!win || visible) return;
+  if (!win || win.isDestroyed() || visible) return;
   visible = true;
   clearTimeout(hideTimer);
   win.showInactive();
@@ -159,7 +199,7 @@ function scheduleHide() {
   if (!visible || hideTimer) return;
   hideTimer = setTimeout(() => {
     hideTimer = null;
-    if (!visible || !win) return;
+    if (!visible || !win || win.isDestroyed()) return;
     visible = false;
     if (ready) win.webContents.send('reveal', false);
     // Let the exit animation play before hiding the window.
@@ -171,10 +211,39 @@ function cancelHide() {
   if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
 }
 
+/** Only cross the process boundary when the pointer actually moved. */
+let sentCursor = { x: -999, y: -999 };
+function sendCursor(cursor) {
+  if (!win || win.isDestroyed()) return;
+  const b = win.getBounds();
+  const p = { x: cursor.x - b.x, y: cursor.y - b.y };
+  if (Math.abs(p.x - sentCursor.x) < 3 && Math.abs(p.y - sentCursor.y) < 3) return;
+  sentCursor = p;
+  win.webContents.send('cursor', p);
+}
+
+/**
+ * Sampling the cursor is the only thing this process does continuously, so it
+ * runs at two speeds: lazily while nothing is on screen, and smoothly once the
+ * widget is out. Same behaviour, a third of the wake-ups.
+ */
+const POLL_IDLE = 140;
+const POLL_LIVE = 40;
+let pollRate = POLL_IDLE;
+function setPollRate(ms) {
+  if (ms === pollRate) return;
+  pollRate = ms;
+  clearInterval(pollTimer);
+  pollTimer = setInterval(poll, pollRate);
+}
+
 function poll() {
-  if (!win) return;
+  if (!win || win.isDestroyed()) return;
+  setPollRate(visible || pinned ? POLL_LIVE : POLL_IDLE);
   const cursor = screen.getCursorScreenPoint();
   const all = screen.getAllDisplays();
+
+  if (pinned) { cancelHide(); sendCursor(cursor); return; }
 
   if (!visible) {
     const display = screen.getDisplayNearestPoint(cursor);
@@ -189,7 +258,7 @@ function poll() {
   const b = win.getBounds();
   if (DEMO || insideKeepAlive(cursor, b, rows, activeDisplay().workArea)) cancelHide();
   else scheduleHide();
-  win.webContents.send('cursor', { x: cursor.x - b.x, y: cursor.y - b.y });
+  sendCursor(cursor);
 }
 
 // --- Data -------------------------------------------------------------------
@@ -226,11 +295,14 @@ async function refresh() {
     failures = 0;
     lastGood = data;
     lastData = data;
+    raiseAlerts(data.gauges);
+    store.save({ lastGood: data, failures: 0, alerts: alertLedger });
   } else {
     failures += 1;
     lastData = lastGood
       ? { ...lastGood, stale: true, reason: data.reason, checkedAt: data.fetchedAt }
       : data;
+    store.save({ failures });
   }
 
   logState(data);
@@ -243,7 +315,7 @@ async function refresh() {
 }
 
 function updateTrayTitle() {
-  if (!tray) return;
+  if (!tray || tray.isDestroyed()) return;
   const session = (lastData.gauges || []).find((g) => g.id === 'session');
   const label = lastData.ok && session ? `Claude ${session.percent} %` : IDLE_LABEL;
   tray.setToolTip(label);
@@ -252,15 +324,37 @@ function updateTrayTitle() {
   }
 }
 
+/**
+ * Warn before the ceiling, once per level and per reset window. The ledger
+ * lives on disk so a restart does not replay every alert you already saw.
+ */
+function raiseAlerts(gauges) {
+  const thresholds = Array.isArray(config.alertAt) ? config.alertAt : [];
+  if (!thresholds.length || !Notification.isSupported()) return;
+
+  const { raise, ledger } = alerts.due(gauges, thresholds, alertLedger);
+  alertLedger = ledger;
+
+  for (const { gauge, level } of raise) {
+    const name = gauge.model || (gauge.kind === 'session' ? T.session : T.allModels);
+    new Notification({
+      title: T.notifyTitle(level),
+      body: T.notifyBody(name, gauge.percent),
+      silent: level < 90
+    }).show();
+  }
+}
+
 // --- Status bar icon --------------------------------------------------------
 
 // The tray menu speaks the same language as the window.
-const MENU = I18N.pick(app.getLocale()).menu;
+const T = I18N.pick(app.getLocale());
+const MENU = T.menu;
 const IDLE_LABEL = 'Claude Marge';
 
 /** Rebuilt on every change so the checkbox always shows the real state. */
 function buildMenu() {
-  if (!tray) return;
+  if (!tray || tray.isDestroyed()) return;
   const atLogin = autostart.isEnabled();
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: MENU.refresh, click: () => refresh() },
@@ -274,9 +368,15 @@ function buildMenu() {
       enabled: atLogin !== null,
       click: (item) => { autostart.setEnabled(item.checked); buildMenu(); }
     },
+    {
+      label: MENU.pin,
+      type: 'checkbox',
+      checked: pinned,
+      click: (item) => setPinned(item.checked)
+    },
     { label: MENU.restartNow, click: () => autostart.restartNow() },
     { type: 'separator' },
-    { label: MENU.open, click: () => shell.showItemInFolder(CONFIG_PATH) },
+    { label: MENU.open, click: () => openConfig() },
     { label: MENU.reload, click: () => { config = loadConfig(); placeOn(activeDisplay()); buildMenu(); } },
     { type: 'separator' },
     { label: MENU.quit, click: () => { app.isQuitting = true; app.quit(); } }
@@ -297,6 +397,23 @@ function createTray() {
   }
   buildMenu();
   updateTrayTitle();
+}
+
+/** Pinned mode: the widget stays open until you unpin it. */
+function setPinned(on) {
+  pinned = on;
+  if (pinned) show(); else scheduleHide();
+  buildMenu();
+}
+
+function registerShortcut() {
+  const accelerator = (config.shortcut || '').trim();
+  if (!accelerator) return;
+  try {
+    globalShortcut.register(accelerator, () => setPinned(!pinned));
+  } catch (_) {
+    // An invalid or already taken accelerator must not stop the widget.
+  }
 }
 
 // --- Lifecycle --------------------------------------------------------------
@@ -322,7 +439,10 @@ app.whenReady().then(() => {
   createWindow();
   createTray();
   refresh();
-  pollTimer = setInterval(poll, 45);
+  pollTimer = setInterval(poll, pollRate);
+  registerShortcut();
+  // Waking from sleep with hours-old numbers is worse than one extra call.
+  powerMonitor.on('resume', () => { failures = 0; refresh(); });
   if (DEMO) show(); // showcase mode: stays open, no cursor needed
 
 });
@@ -352,4 +472,5 @@ app.on('window-all-closed', () => {});
 app.on('before-quit', () => {
   clearInterval(pollTimer);
   clearTimeout(refreshTimer);
+  globalShortcut.unregisterAll();
 });

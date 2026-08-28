@@ -12,6 +12,8 @@
   const STRINGS = {
     en: {
       panelTitle: 'Claude Marge',
+      notifyTitle: (level) => `Claude usage at ${level}%`,
+      notifyBody: (name, percent) => `${name} is at ${percent}% of its limit.`,
       session: 'Current session',
       allModels: 'All models',
       modelWeek: (m) => `${m}, this week`,
@@ -36,11 +38,14 @@
       },
       menu: { refresh: 'Refresh now', peek: 'Show for 3 seconds', open: 'Open configuration',
         reload: 'Reload configuration', quit: 'Quit',
-        startAtLogin: 'Start at login', restartNow: 'Restart the widget' }
+        startAtLogin: 'Start at login', restartNow: 'Restart the widget',
+        pin: 'Keep visible' }
     },
 
     fr: {
       panelTitle: 'Claude Marge',
+      notifyTitle: (level) => `Consommation Claude à ${level} %`,
+      notifyBody: (name, percent) => `${name} est à ${percent} % de sa limite.`,
       session: 'Session en cours',
       allModels: 'Tous modèles',
       modelWeek: (m) => `${m}, cette semaine`,
@@ -65,11 +70,14 @@
       },
       menu: { refresh: 'Rafraîchir maintenant', peek: 'Afficher 3 secondes',
         open: 'Ouvrir la configuration', reload: 'Recharger la configuration', quit: 'Quitter',
-        startAtLogin: 'Lancer au démarrage', restartNow: 'Relancer le widget' }
+        startAtLogin: 'Lancer au démarrage', restartNow: 'Relancer le widget',
+        pin: 'Garder visible' }
     },
 
     es: {
       panelTitle: 'Claude Marge',
+      notifyTitle: (level) => `Consumo de Claude al ${level} %`,
+      notifyBody: (name, percent) => `${name} está al ${percent} % de su límite.`,
       session: 'Sesión actual',
       allModels: 'Todos los modelos',
       modelWeek: (m) => `${m}, esta semana`,
@@ -94,11 +102,14 @@
       },
       menu: { refresh: 'Actualizar ahora', peek: 'Mostrar 3 segundos',
         open: 'Abrir la configuración', reload: 'Recargar la configuración', quit: 'Salir',
-        startAtLogin: 'Iniciar al arrancar', restartNow: 'Reiniciar el widget' }
+        startAtLogin: 'Iniciar al arrancar', restartNow: 'Reiniciar el widget',
+        pin: 'Mantener visible' }
     },
 
     de: {
       panelTitle: 'Claude Marge',
+      notifyTitle: (level) => `Claude-Verbrauch bei ${level} %`,
+      notifyBody: (name, percent) => `${name} liegt bei ${percent} % des Limits.`,
       session: 'Aktuelle Sitzung',
       allModels: 'Alle Modelle',
       modelWeek: (m) => `${m}, diese Woche`,
@@ -123,11 +134,14 @@
       },
       menu: { refresh: 'Jetzt aktualisieren', peek: '3 Sekunden anzeigen',
         open: 'Konfiguration öffnen', reload: 'Konfiguration neu laden', quit: 'Beenden',
-        startAtLogin: 'Beim Anmelden starten', restartNow: 'Widget neu starten' }
+        startAtLogin: 'Beim Anmelden starten', restartNow: 'Widget neu starten',
+        pin: 'Sichtbar lassen' }
     },
 
     it: {
       panelTitle: 'Claude Marge',
+      notifyTitle: (level) => `Consumo Claude al ${level} %`,
+      notifyBody: (name, percent) => `${name} è al ${percent} % del limite.`,
       session: 'Sessione corrente',
       allModels: 'Tutti i modelli',
       modelWeek: (m) => `${m}, questa settimana`,
@@ -152,11 +166,14 @@
       },
       menu: { refresh: 'Aggiorna ora', peek: 'Mostra per 3 secondi',
         open: 'Apri la configurazione', reload: 'Ricarica la configurazione', quit: 'Esci',
-        startAtLogin: "Avvia all'accesso", restartNow: 'Riavvia il widget' }
+        startAtLogin: "Avvia all'accesso", restartNow: 'Riavvia il widget',
+        pin: 'Mantieni visibile' }
     },
 
     zh: {
       panelTitle: 'Claude Marge',
+      notifyTitle: (level) => `Claude 用量已达 ${level}%`,
+      notifyBody: (name, percent) => `${name} 已用至上限的 ${percent}%。`,
       session: '当前会话',
       allModels: '所有模型',
       modelWeek: (m) => `${m}，本周`,
@@ -181,11 +198,14 @@
       },
       menu: { refresh: '立即刷新', peek: '显示 3 秒', open: '打开配置',
         reload: '重新加载配置', quit: '退出',
-        startAtLogin: '登录时启动', restartNow: '重启小组件' }
+        startAtLogin: '登录时启动', restartNow: '重启小组件',
+        pin: '保持显示' }
     },
 
     ja: {
       panelTitle: 'Claude Marge',
+      notifyTitle: (level) => `Claude の使用量が ${level}%`,
+      notifyBody: (name, percent) => `${name} は上限の ${percent}% です。`,
       session: '現在のセッション',
       allModels: 'すべてのモデル',
       modelWeek: (m) => `${m}、今週`,
@@ -210,7 +230,8 @@
       },
       menu: { refresh: '今すぐ更新', peek: '3 秒間表示', open: '設定を開く',
         reload: '設定を再読み込み', quit: '終了',
-        startAtLogin: 'ログイン時に起動', restartNow: 'ウィジェットを再起動' }
+        startAtLogin: 'ログイン時に起動', restartNow: 'ウィジェットを再起動',
+        pin: '表示したままにする' }
     }
   };
 
