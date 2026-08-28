@@ -38,6 +38,12 @@ cd ~/.claude-marge && npm install && npm test
 bash install.sh
 ```
 
+Si Electron ne se décompresse pas, l'installeur s'en aperçoit et le répare, au
+lieu d'annoncer une réussite sur une app incapable de démarrer. npm 11 bloque
+par défaut les scripts d'installation des paquets, ce qui laisse Electron
+téléchargé mais jamais extrait, et une extraction partielle sur macOS perd son
+framework. Vu de l'extérieur, les deux donnent la même chose : rien ne se lance.
+
 La désinstallation tient elle aussi en une commande, et elle ne touche jamais à
 tes identifiants Claude :
 

@@ -50,7 +50,57 @@ else
 fi
 
 info "Installing dependencies (this downloads Electron, about 100 MB)"
-( cd "$APP_DIR" && npm install --silent --no-audit --no-fund )
+( cd "$APP_DIR" && npm install --no-audit --no-fund ) >/tmp/claude-marge-npm.log 2>&1 ||
+  { tail -5 /tmp/claude-marge-npm.log; fail "npm install failed. Full log: /tmp/claude-marge-npm.log"; }
+
+# --- Is Electron actually there? ---------------------------------------------
+# The test suite runs under Node and passes with a broken Electron, so it proves
+# nothing about the app being able to start. npm 11 also blocks install scripts
+# by default, which leaves Electron downloaded but never unpacked, and says so
+# only in a warning. Both end the same way: a widget that never appears.
+
+electron_binary() {
+  if [ "$OS" = mac ]; then
+    echo "$APP_DIR/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+  else
+    echo "$APP_DIR/node_modules/electron/dist/electron"
+  fi
+}
+
+electron_works() {
+  bin="$(electron_binary)"
+  [ -x "$bin" ] || return 1
+  ELECTRON_RUN_AS_NODE=1 "$bin" -e 'process.exit(0)' >/dev/null 2>&1
+}
+
+repair_electron() {
+  info "Electron was not unpacked. Repairing."
+  rm -rf "$APP_DIR/node_modules/electron/dist" "$APP_DIR/node_modules/electron/path.txt"
+  ( cd "$APP_DIR/node_modules/electron" && node install.js ) >>/tmp/claude-marge-npm.log 2>&1 || true
+  electron_works && return 0
+
+  # macOS: unpack the cached archive with ditto. The JavaScript unzip can drop
+  # the framework's symlinks without reporting anything, leaving a 256 KB app
+  # that dyld refuses to load.
+  if [ "$OS" = mac ]; then
+    zip="$(find "$HOME/Library/Caches/electron" -name 'electron-*-darwin-*.zip' -print 2>/dev/null | head -1)"
+    if [ -n "$zip" ]; then
+      info "Unpacking the cached archive with ditto."
+      rm -rf "$APP_DIR/node_modules/electron/dist"
+      mkdir -p "$APP_DIR/node_modules/electron/dist"
+      ditto -x -k "$zip" "$APP_DIR/node_modules/electron/dist"
+      electron_binary > "$APP_DIR/node_modules/electron/path.txt"
+    fi
+  fi
+  electron_works
+}
+
+if ! electron_works; then
+  repair_electron || fail "Electron cannot start. If npm printed an allow-scripts warning, run
+  npm approve-scripts --allow-scripts-pending
+in $APP_DIR and run this installer again. Log: /tmp/claude-marge-npm.log"
+fi
+info "Electron: ready"
 
 info "Running the test suite"
 ( cd "$APP_DIR" && npm test >/dev/null ) || fail "Tests failed. Please open an issue rather than running a broken widget."

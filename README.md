@@ -38,6 +38,12 @@ cd ~/.claude-marge && npm install && npm test
 bash install.sh
 ```
 
+If Electron does not unpack, the installer notices and repairs it rather than
+declaring success on an app that cannot start. npm 11 blocks package install
+scripts by default, which leaves Electron downloaded but never extracted, and a
+partly extracted bundle on macOS is missing its framework. Both look identical
+from the outside: nothing launches.
+
 Removing it is one command too, and it never touches your Claude credentials:
 
 ```bash
