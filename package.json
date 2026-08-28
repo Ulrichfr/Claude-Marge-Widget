@@ -1,0 +1,43 @@
+{
+  "name": "claude-usage",
+  "version": "0.1.0",
+  "description": "Widget de bord d'ecran qui affiche la consommation Claude Max en temps reel",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "demo": "electron . --demo",
+    "usage": "node src/usage.js",
+    "test": "node test/geometry.test.js && node test/usage.test.js",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "author": "Ulrich Rozier",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.0"
+  },
+  "build": {
+    "appId": "com.ulrichrozier.claudeusage",
+    "productName": "Claude Usage",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "extendInfo": {
+        "LSUIElement": 1
+      }
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    }
+  }
+}

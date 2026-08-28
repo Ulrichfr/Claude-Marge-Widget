@@ -1,0 +1,261 @@
+/* Widget de bord d'ecran. Tout est peint sur un fond transparent : la fenetre
+   Electron n'a ni cadre ni ombre, seules les formes noires ci-dessous se
+   voient. Les durees sont volontairement courtes a la sortie et plus amples a
+   l'entree, pour que l'apparition soit remarquee et la disparition oubliee. */
+
+:root {
+  --pill-bg: #060607;
+  --panel-bg: #0B0B0C;
+  --track: rgba(255, 255, 255, 0.11);
+  --ink: #F7F7F8;
+  --ink-dim: rgba(247, 247, 248, 0.46);
+  --ring-face: #232326;
+  --ok: #34D399;
+  --warm: #E9E11F;
+  --hot: #FF5B2B;
+  --crit: #FF3B30;
+  --ease-in: cubic-bezier(0.16, 1.02, 0.28, 1);
+  --ease-out: cubic-bezier(0.4, 0, 0.9, 0.35);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  cursor: default;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Inter",
+    "Segoe UI Variable", system-ui, "Cantarell", "Helvetica Neue", sans-serif;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* --- La pilule ----------------------------------------------------------- */
+
+.pill {
+  position: relative;
+  width: var(--pill-w, 92px);
+  background: var(--pill-bg);
+  border-radius: 32px 0 0 32px;
+  padding: var(--pill-pad, 22px) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--row-gap, 26px);
+  box-shadow: -18px 0 48px rgba(0, 0, 0, 0.42);
+  opacity: 0;
+  transform: translateX(104%);
+  transition: transform 260ms var(--ease-out), opacity 180ms var(--ease-out);
+}
+
+.stage.revealed .pill {
+  opacity: 1;
+  transform: translateX(0);
+  transition: transform 460ms var(--ease-in), opacity 240ms linear;
+}
+
+/* --- Un anneau ----------------------------------------------------------- */
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+}
+
+.stage.revealed .item {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 320ms var(--ease-in) var(--enter-delay, 0ms),
+              transform 420ms var(--ease-in) var(--enter-delay, 0ms);
+}
+
+.ring {
+  position: relative;
+  width: var(--ring, 60px);
+  height: var(--ring, 60px);
+  transition: transform 260ms var(--ease-in);
+}
+
+.item.hot .ring { transform: scale(1.09); }
+
+.ring-face {
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: var(--ring-face);
+  display: grid;
+  place-items: center;
+  transition: background 220ms linear;
+}
+
+.item.hot .ring-face { background: #2F2F33; }
+
+.ring > svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.ring .track { stroke: var(--track); }
+.ring .value {
+  stroke: var(--tone, var(--ok));
+  stroke-linecap: round;
+  transition: stroke-dashoffset 900ms var(--ease-in), stroke 400ms linear;
+}
+
+.glyph { width: 26px; height: 26px; display: block; color: var(--ink); }
+.glyph svg { width: 100%; height: 100%; display: block; }
+.mono {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.pct {
+  margin-top: var(--ring-gap, 10px);
+  height: var(--label-h, 22px);
+  line-height: var(--label-h, 22px);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- La bulle ------------------------------------------------------------ */
+
+.panel {
+  position: absolute;
+  right: calc(var(--pill-w, 92px) + 16px);
+  width: 424px;
+  background: var(--panel-bg);
+  border-radius: 24px;
+  padding: 18px 22px 20px;
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateX(14px) scale(0.97);
+  transform-origin: right center;
+  pointer-events: none;
+  transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+
+.panel.open {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transition: opacity 240ms var(--ease-in), transform 320ms var(--ease-in);
+}
+
+.panel-tail {
+  position: absolute;
+  right: -13px;
+  width: 0;
+  height: 0;
+  border-top: 13px solid transparent;
+  border-bottom: 13px solid transparent;
+  border-left: 14px solid var(--panel-bg);
+  transition: top 320ms var(--ease-in);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 15px;
+}
+
+.panel-mark { width: 21px; height: 21px; color: var(--ink); display: block; }
+.panel-mark svg { width: 100%; height: 100%; }
+
+.panel-title {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.panel-note {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+
+.row + .row { margin-top: 15px; }
+
+.row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.row-name {
+  font-size: 14px;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+}
+
+.row-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tone, var(--ok));
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 5px;
+  padding: 3px 6px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.row-reset {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+
+.bar {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 4px;
+  background: var(--tone, var(--ok));
+  transition: width 780ms var(--ease-in), background 400ms linear;
+}
+
+.row-foot {
+  margin-top: 7px;
+  font-size: 13px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.row.muted .row-name,
+.row.muted .row-foot { color: rgba(247, 247, 248, 0.62); }
+
+.panel-error {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+.panel-error b { color: var(--ink); font-weight: 500; }

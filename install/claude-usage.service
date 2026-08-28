@@ -1,0 +1,16 @@
+[Unit]
+Description=Claude Usage, widget de consommation au bord de l'ecran
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+# Electron ne sait pas se positionner sous Wayland : on force X11.
+Environment=ELECTRON_OZONE_PLATFORM_HINT=x11
+WorkingDirectory=%h/claude-usage
+ExecStart=%h/claude-usage/node_modules/.bin/electron %h/claude-usage
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
