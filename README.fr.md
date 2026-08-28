@@ -404,6 +404,11 @@ serveur en envoie un, et ne relance pas un appel juste parce que tu as survolé.
 Un appel raté n'efface jamais l'affichage : les derniers vrais chiffres restent,
 marqués comme datés, avec la raison en dessous.
 
+Fabriquer une app installable ne fait pas partie des scripts, parce que ça
+demande une chaîne d'outils que personne ne devrait télécharger juste pour
+lancer un widget. Le bloc `build` de `package.json` est prêt pour ça :
+`npx electron-builder --mac`.
+
 Pour vérifier le rendu sur une machine sans compositeur, ou en intégration
 continue :
 

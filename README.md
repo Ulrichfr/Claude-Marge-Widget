@@ -384,6 +384,10 @@ minutes, obeys `Retry-After` when the server sends one, and does not fetch again
 just because you hovered. A failed call never wipes the display: the last real
 numbers stay on screen, marked stale, with the reason underneath.
 
+Packaging an installable app is not part of the scripts, because it needs a
+toolchain nobody should download just to run a widget. The `build` block in
+`package.json` is ready for it: `npx electron-builder --mac`.
+
 For a render check on a machine with no compositor, or in CI:
 
 ```bash
