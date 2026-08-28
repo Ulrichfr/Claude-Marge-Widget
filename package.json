@@ -1,7 +1,7 @@
 {
-  "name": "claude-usage",
+  "name": "claude-marge-widget",
   "version": "0.1.0",
-  "description": "Widget de bord d'ecran qui affiche la consommation Claude Max en temps reel",
+  "description": "Claude Marge Widget : la marge qui te reste sur Claude Max, au bord de l'ecran",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -17,8 +17,8 @@
     "electron": "^33.2.0"
   },
   "build": {
-    "appId": "com.ulrichrozier.claudeusage",
-    "productName": "Claude Usage",
+    "appId": "com.ulrichrozier.marge",
+    "productName": "Claude Marge Widget",
     "files": [
       "src/**/*",
       "package.json"

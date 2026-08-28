@@ -3,16 +3,16 @@
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>com.ulrichrozier.claude-usage</string>
+  <key>Label</key><string>com.ulrichrozier.marge</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/sh</string>
     <string>-c</string>
-    <string>exec "$HOME/claude-usage/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron" "$HOME/claude-usage"</string>
+    <string>exec "$HOME/marge/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron" "$HOME/marge"</string>
   </array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
-  <key>StandardOutPath</key><string>/tmp/claude-usage.log</string>
-  <key>StandardErrorPath</key><string>/tmp/claude-usage.log</string>
+  <key>StandardOutPath</key><string>/tmp/marge.log</string>
+  <key>StandardErrorPath</key><string>/tmp/marge.log</string>
 </dict>
 </plist>

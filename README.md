@@ -1,4 +1,4 @@
-# Claude Usage
+# Claude Marge Widget
 
 Widget collé au bord droit de l'écran. Il apparaît quand la souris touche le
 bord, montre où en sont les quotas Claude Max, et disparaît dès qu'on s'en va.
@@ -7,6 +7,12 @@ Un anneau par quota, et les quotas ne sont pas les mêmes selon le modèle :
 la session de 5 heures, le total hebdomadaire, puis un anneau par modèle
 (Opus, Sonnet, Fable...) avec sa propre limite. La liste est construite à
 partir de ce que le compte expose réellement, elle n'est pas figée dans le code.
+
+## Le nom
+
+La marge, c'est ce qu'il reste avant de taper le plafond, et c'est aussi
+l'endroit où le widget vit : ce ruban à droite de l'écran où rien d'autre ne
+se passe.
 
 ## D'où viennent les chiffres
 
@@ -27,7 +33,7 @@ refuse l'accès hors session graphique. Ce n'est pas un défaut du widget, qui
 tourne lui dans la session de l'utilisateur. Pour vérifier son état à distance,
 lire son journal plutôt que tenter la lecture soi-même :
 
-    tail /tmp/claude-usage.log
+    tail /tmp/marge.log
 
 Il n'écrit une ligne qu'au changement d'état, jamais à chaque minute.
 
@@ -49,24 +55,28 @@ Le widget ne prend jamais le focus et ne capte jamais un clic : la fenêtre est
 transparente aux événements souris de bout en bout. Le survol est déduit de la
 position du curseur, échantillonnée 22 fois par seconde.
 
-Pour quitter : l'icône dans la barre d'état, ou `pkill -f claude-usage`.
+Pour quitter : l'icône dans la barre d'état, ou `pkill -f marge`.
 
 ## Démarrage automatique
 
 macOS :
 
-    cp install/com.ulrichrozier.claude-usage.plist ~/Library/LaunchAgents/
-    launchctl load ~/Library/LaunchAgents/com.ulrichrozier.claude-usage.plist
+    cp install/com.ulrichrozier.marge.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.ulrichrozier.marge.plist
+
+Pour le relancer après une modification : `launchctl kickstart -k
+gui/$(id -u)/com.ulrichrozier.marge`. Pour le retirer : `launchctl bootout
+gui/$(id -u)/com.ulrichrozier.marge`.
 
 Linux :
 
     mkdir -p ~/.config/systemd/user
-    cp install/claude-usage.service ~/.config/systemd/user/
-    systemctl --user enable --now claude-usage
+    cp install/marge.service ~/.config/systemd/user/
+    systemctl --user enable --now marge
 
 ## Réglages
 
-`~/.config/claude-usage/config.json`, relu par « Recharger la configuration »
+`~/.config/marge/config.json`, relu par « Recharger la configuration »
 dans le menu de la barre d'état :
 
     {
@@ -94,7 +104,7 @@ celui qui coupera en premier.
 
 Une capture du rendu réel, hors compositeur, se prend avec :
 
-    CLAUDE_USAGE_CAPTURE=/tmp/widget.png npm run demo
+    MARGE_CAPTURE=/tmp/widget.png npm run demo
 
 ## Limites connues
 

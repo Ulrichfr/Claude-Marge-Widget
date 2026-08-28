@@ -23,9 +23,9 @@ const {
 // Toute la geometrie en decoule, et la fenetre se redimensionne si l'API en
 // renvoie un de plus.
 let rows = 3;
-const DEMO = process.env.CLAUDE_USAGE_DEMO === '1' || process.argv.includes('--demo');
+const DEMO = process.env.MARGE_DEMO === '1' || process.argv.includes('--demo');
 
-const CONFIG_PATH = path.join(os.homedir(), '.config', 'claude-usage', 'config.json');
+const CONFIG_PATH = path.join(os.homedir(), '.config', 'marge', 'config.json');
 const DEFAULTS = {
   verticalAnchor: 0.45,   // 0 = haut de l'ecran, 1 = bas
   refreshSeconds: 60,
@@ -210,7 +210,7 @@ async function refresh() {
 function updateTrayTitle() {
   if (!tray) return;
   const session = (lastData.gauges || []).find((g) => g.id === 'session');
-  const label = lastData.ok && session ? `Claude ${session.percent} %` : 'Claude Usage';
+  const label = lastData.ok && session ? `Claude ${session.percent} %` : 'Claude Marge';
   tray.setToolTip(label);
   if (process.platform === 'darwin' && lastData.ok && session) {
     tray.setTitle(` ${session.percent}%`);
@@ -259,13 +259,13 @@ ipcMain.on('request-refresh', () => refresh());
 
 // Capture de controle : rend la fenetre hors ecran et quitte. Sert a verifier
 // le rendu reel sur une machine sans compositeur, ou en integration continue.
-if (process.env.CLAUDE_USAGE_CAPTURE) {
+if (process.env.MARGE_CAPTURE) {
   app.whenReady().then(() => {
     setTimeout(async () => {
       try {
         const image = await win.webContents.capturePage();
-        fs.writeFileSync(process.env.CLAUDE_USAGE_CAPTURE, image.toPNG());
-        console.log('capture ecrite:', process.env.CLAUDE_USAGE_CAPTURE,
+        fs.writeFileSync(process.env.MARGE_CAPTURE, image.toPNG());
+        console.log('capture ecrite:', process.env.MARGE_CAPTURE,
           image.getSize().width + 'x' + image.getSize().height);
       } catch (err) {
         console.error('capture impossible:', err.message);
