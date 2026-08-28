@@ -25,11 +25,13 @@ function readCredentials() {
     try {
       const raw = execFileSync('security', [
         'find-generic-password', '-a', os.userInfo().username, '-w', '-s', KEYCHAIN_SERVICE
-      ], { encoding: 'utf8', timeout: 5000 });
+      ], { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] });
       const parsed = JSON.parse(raw.trim());
       if (parsed && parsed.claudeAiOauth) return parsed.claudeAiOauth;
     } catch (_) {
-      // Trousseau vide ou verrouille : on retombe sur le fichier.
+      // Pas d'entree, trousseau verrouille, ou Claude Code jamais connecte sur
+      // cette machine : on retombe silencieusement sur le fichier. Le message
+      // de `security` est etouffe, il n'apprend rien et pollue le journal.
     }
   }
   try {
