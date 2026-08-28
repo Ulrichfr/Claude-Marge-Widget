@@ -1,12 +1,12 @@
 'use strict';
 /**
- * Fenetre-widget collee au bord droit de l'ecran.
+ * The widget window, flush against the right edge of the screen.
  *
- * Principe : la fenetre est TOUJOURS transparente aux clics
- * (setIgnoreMouseEvents). Elle ne vole jamais le focus ni un clic. Le survol
- * est deduit d'un echantillonnage de la position du curseur cote processus
- * principal, puis envoye au rendu qui fait lui-meme son hit-test. C'est la
- * seule methode qui se comporte pareil sur macOS et sur X11.
+ * Core idea: the window is ALWAYS click-through (setIgnoreMouseEvents). It
+ * never steals focus and never swallows a click. Hover is derived from
+ * sampling the cursor position in the main process, then handed to the
+ * renderer which does its own hit-testing. It is the only approach that
+ * behaves the same on macOS and on X11.
  */
 
 const { app, BrowserWindow, screen, Tray, Menu, nativeImage, ipcMain, shell } = require('electron');
@@ -14,22 +14,23 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { fetchUsage } = require('./usage');
+const I18N = require('./i18n');
 const {
   G, layout, boundsForDisplay: computeBounds,
   isOuterRightEdge, inHotZone, insideKeepAlive
 } = require('./geometry');
 
-// Le nombre d'anneaux depend du compte : chaque modele a son propre quota.
-// Toute la geometrie en decoule, et la fenetre se redimensionne si l'API en
-// renvoie un de plus.
+// The number of rings depends on the account: every model carries its own
+// quota. The whole layout follows from it, and the window resizes if the API
+// returns one more.
 let rows = 3;
 const DEMO = process.env.MARGE_DEMO === '1' || process.argv.includes('--demo');
 
-const CONFIG_PATH = path.join(os.homedir(), '.config', 'marge', 'config.json');
+const CONFIG_PATH = path.join(os.homedir(), '.config', 'claude-marge', 'config.json');
 const DEFAULTS = {
-  verticalAnchor: 0.45,   // 0 = haut de l'ecran, 1 = bas
+  verticalAnchor: 0.45,   // 0 = top of the screen, 1 = bottom
   refreshSeconds: 60,
-  followCursorDisplay: true
+  followCursorDisplay: true  // show up on whichever display holds the cursor
 };
 
 function loadConfig() {
@@ -48,7 +49,7 @@ let hideTimer = null;
 let pollTimer = null;
 let refreshTimer = null;
 let lastData = { ok: false, reason: 'loading', gauges: [] };
-let ready = false; // la page a fini de charger et ecoute les messages
+let ready = false; // the page finished loading and is listening
 let currentDisplayId = null;
 
 // --- Placement --------------------------------------------------------------
@@ -68,7 +69,7 @@ function placeOn(display) {
   win.setBounds(boundsForDisplay(display));
 }
 
-// --- Fenetre ----------------------------------------------------------------
+// --- Window -----------------------------------------------------------------
 
 function createWindow() {
   const display = screen.getPrimaryDisplay();
@@ -99,15 +100,15 @@ function createWindow() {
 
   win.setAlwaysOnTop(true, 'screen-saver');
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  win.setIgnoreMouseEvents(true); // jamais de clic vole, jamais de focus pris
+  win.setIgnoreMouseEvents(true); // never steal a click, never take focus
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.webContents.on('did-finish-load', () => {
     ready = true;
     sendGeometry();
     win.webContents.send('usage', lastData);
-    // Un survol peut arriver avant la fin du chargement : on rejoue l'etat
-    // courant, sinon la pilule reste invisible jusqu'au survol suivant.
+    // A hover can happen before loading finishes: replay the current state,
+    // otherwise the pill stays invisible until the next hover.
     if (visible) win.webContents.send('reveal', true);
   });
 }
@@ -126,7 +127,7 @@ function sendGeometry() {
   });
 }
 
-/** Reajuste la hauteur quand le nombre de quotas exposes par le compte change. */
+/** Resize when the number of quotas the account exposes changes. */
 function setRows(n) {
   const next = Math.max(1, n);
   if (next === rows) return;
@@ -135,7 +136,7 @@ function setRows(n) {
   sendGeometry();
 }
 
-// --- Apparition / disparition ----------------------------------------------
+// --- Reveal and hide --------------------------------------------------------
 
 function show() {
   if (!win || visible) return;
@@ -153,7 +154,7 @@ function scheduleHide() {
     if (!visible || !win) return;
     visible = false;
     if (ready) win.webContents.send('reveal', false);
-    // On laisse l'animation de sortie se jouer avant de masquer la fenetre.
+    // Let the exit animation play before hiding the window.
     setTimeout(() => { if (!visible && win) win.hide(); }, 320);
   }, G.hideGrace);
 }
@@ -183,19 +184,18 @@ function poll() {
   win.webContents.send('cursor', { x: cursor.x - b.x, y: cursor.y - b.y });
 }
 
-// --- Donnees ----------------------------------------------------------------
+// --- Data -------------------------------------------------------------------
 
-/** Une ligne de journal par changement d'etat, jamais a chaque minute. */
+/** One log line per state change, never one per minute. */
 let lastLogged = null;
 function logState(data) {
-  const session = (data.gauges || []).find((g) => g.id === 'session');
+  const describe = (g) => `${g.model || g.kind} ${g.percent}%`;
   const state = data.ok
-    ? `ok ${(data.gauges || []).map((g) => `${g.title} ${g.percent}%`).join(', ')}`
-    : `echec ${data.reason}`;
+    ? `ok ${(data.gauges || []).map(describe).join(', ')}`
+    : `failed ${data.reason}`;
   if (state === lastLogged) return;
   lastLogged = state;
   console.log(`[${new Date().toISOString()}] ${state}`);
-  if (session) { /* la valeur sert aussi au titre de la barre d'etat */ }
 }
 
 async function refresh() {
@@ -210,14 +210,18 @@ async function refresh() {
 function updateTrayTitle() {
   if (!tray) return;
   const session = (lastData.gauges || []).find((g) => g.id === 'session');
-  const label = lastData.ok && session ? `Claude ${session.percent} %` : 'Claude Marge';
+  const label = lastData.ok && session ? `Claude ${session.percent} %` : IDLE_LABEL;
   tray.setToolTip(label);
   if (process.platform === 'darwin' && lastData.ok && session) {
     tray.setTitle(` ${session.percent}%`);
   }
 }
 
-// --- Icone de barre d'etat --------------------------------------------------
+// --- Status bar icon --------------------------------------------------------
+
+// The tray menu speaks the same language as the window.
+const MENU = I18N.pick(app.getLocale()).menu;
+const IDLE_LABEL = 'Claude Marge';
 
 function createTray() {
   const iconPath = path.join(__dirname, 'renderer', 'tray.png');
@@ -227,21 +231,21 @@ function createTray() {
   try {
     tray = new Tray(image);
   } catch (_) {
-    return; // pas d'indicateur systeme sur cette session : on continue sans
+    return; // no system tray on this session: carry on without one
   }
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Rafraichir maintenant', click: () => refresh() },
-    { label: 'Afficher 3 secondes', click: () => { show(); setTimeout(scheduleHide, 3000); } },
+    { label: MENU.refresh, click: () => refresh() },
+    { label: MENU.peek, click: () => { show(); setTimeout(scheduleHide, 3000); } },
     { type: 'separator' },
-    { label: 'Ouvrir la configuration', click: () => shell.showItemInFolder(CONFIG_PATH) },
-    { label: 'Recharger la configuration', click: () => { config = loadConfig(); placeOn(activeDisplay()); } },
+    { label: MENU.open, click: () => shell.showItemInFolder(CONFIG_PATH) },
+    { label: MENU.reload, click: () => { config = loadConfig(); placeOn(activeDisplay()); } },
     { type: 'separator' },
-    { label: 'Quitter', click: () => { app.isQuitting = true; app.quit(); } }
+    { label: MENU.quit, click: () => { app.isQuitting = true; app.quit(); } }
   ]));
   updateTrayTitle();
 }
 
-// --- Cycle de vie -----------------------------------------------------------
+// --- Lifecycle --------------------------------------------------------------
 
 if (!app.requestSingleInstanceLock()) app.quit();
 
@@ -251,31 +255,31 @@ app.whenReady().then(() => {
   createTray();
   refresh();
   pollTimer = setInterval(poll, 45);
-  if (DEMO) show(); // mode vitrine : le widget reste ouvert, sans le curseur
+  if (DEMO) show(); // showcase mode: stays open, no cursor needed
   refreshTimer = setInterval(refresh, Math.max(20, config.refreshSeconds) * 1000);
 });
 
 ipcMain.on('request-refresh', () => refresh());
 
-// Capture de controle : rend la fenetre hors ecran et quitte. Sert a verifier
-// le rendu reel sur une machine sans compositeur, ou en integration continue.
+// Control capture: render the window off screen and quit. Used to check the
+// real rendering on a machine with no compositor, or in CI.
 if (process.env.MARGE_CAPTURE) {
   app.whenReady().then(() => {
     setTimeout(async () => {
       try {
         const image = await win.webContents.capturePage();
         fs.writeFileSync(process.env.MARGE_CAPTURE, image.toPNG());
-        console.log('capture ecrite:', process.env.MARGE_CAPTURE,
+        console.log('capture written:', process.env.MARGE_CAPTURE,
           image.getSize().width + 'x' + image.getSize().height);
       } catch (err) {
-        console.error('capture impossible:', err.message);
+        console.error('capture failed:', err.message);
       }
       app.exit(0);
     }, 4000);
   });
 }
 
-// Le widget n'a pas de fenetre principale a fermer : on ne quitte jamais tout seul.
+// The widget has no main window to close: it never quits on its own.
 app.on('window-all-closed', () => {});
 app.on('before-quit', () => {
   clearInterval(pollTimer);

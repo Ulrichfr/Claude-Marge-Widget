@@ -1,11 +1,10 @@
 'use strict';
 /**
- * Couche donnees : recupere le jeton OAuth Claude Max la ou l'OS le range,
- * interroge l'endpoint officiel de consommation, et normalise la reponse
- * en trois jauges pretes a afficher.
+ * Data layer: find the Claude OAuth token wherever the OS keeps it, ask the
+ * official usage endpoint, and turn the answer into gauges ready to display.
  *
- * Aucun jeton n'est ecrit, mis en cache sur disque ni envoye ailleurs
- * qu'a api.anthropic.com.
+ * The token is never copied, never cached on disk, and never sent anywhere
+ * other than api.anthropic.com.
  */
 
 const fs = require('fs');
@@ -17,11 +16,12 @@ const { execFileSync } = require('child_process');
 const API_HOST = 'api.anthropic.com';
 const API_PATH = '/api/oauth/usage';
 const CRED_FILE = path.join(os.homedir(), '.claude', '.credentials.json');
-// Le nom du service a change selon les versions de Claude Code. On essaie le
-// nom actuel puis l'ancien, plutot que de supposer lequel tourne sur la machine.
+
+// The Keychain service name changed between Claude Code releases. Try the
+// current one, then the older one, rather than assuming which is installed.
 const KEYCHAIN_SERVICES = ['Claude Code-credentials', 'Claude Code'];
 
-/** Lit les identifiants Claude Code. macOS : Trousseau. Ailleurs : fichier. */
+/** Read Claude Code's credentials. Keychain on macOS, file everywhere else. */
 function readCredentials() {
   if (process.platform === 'darwin') {
     for (const service of KEYCHAIN_SERVICES) {
@@ -32,9 +32,9 @@ function readCredentials() {
         const parsed = JSON.parse(raw.trim());
         if (parsed && parsed.claudeAiOauth) return parsed.claudeAiOauth;
       } catch (_) {
-        // Pas d'entree sous ce nom, trousseau verrouille, ou lecture refusee
-        // hors session graphique : on essaie le nom suivant, puis le fichier.
-        // Le message de `security` est etouffe, il n'apprend rien.
+        // No entry under this name, locked Keychain, or a read refused outside
+        // a GUI session. Try the next name, then the file. The `security`
+        // message is swallowed: it teaches nothing and floods the log.
       }
     }
   }
@@ -56,16 +56,14 @@ function httpsGetJson(token) {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
         'anthropic-beta': 'oauth-2025-04-20',
-        'User-Agent': 'claude-usage-widget/0.1'
+        'User-Agent': 'claude-marge-widget'
       },
       timeout: 10000
     }, (res) => {
       let body = '';
       res.on('data', (c) => { body += c; });
       res.on('end', () => {
-        if (res.statusCode !== 200) {
-          return reject(new Error(`HTTP ${res.statusCode}`));
-        }
+        if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
         try { resolve(JSON.parse(body)); } catch (e) { reject(e); }
       });
     });
@@ -75,28 +73,30 @@ function httpsGetJson(token) {
   });
 }
 
-/** Un bloc {utilization, resets_at} -> pourcentage entier, ou null si absent. */
+/** One {utilization, resets_at} block to a whole percentage, or null if absent. */
 function pct(block) {
   if (!block || block.utilization === null || block.utilization === undefined) return null;
   return Math.max(0, Math.min(100, Math.round(block.utilization)));
 }
 
-/** Monogramme affiche au centre de l'anneau d'un modele. */
+/** Letter shown at the centre of a model's ring. */
 function monogram(name) {
   const clean = String(name || '').trim();
-  if (!clean) return '?';
-  return clean[0].toUpperCase();
+  return clean ? clean[0].toUpperCase() : '?';
 }
 
 /**
- * Construit la liste des jauges, dans l'ordre d'affichage :
- *   1. la fenetre glissante de 5 h, celle qui coupe en pleine tache
- *   2. le quota hebdomadaire tous modeles confondus
- *   3+. un anneau PAR MODELE, parce que les quotas ne sont pas les memes :
- *       Opus, Sonnet, Fable... chacun a sa propre limite hebdo.
+ * Build the gauge list, in display order:
+ *   1. the rolling 5 hour window, the one that cuts you off mid-task
+ *   2. the weekly quota across all models
+ *   3+. one ring PER MODEL, because the quotas are not the same: Opus,
+ *       Sonnet, Fable each carry their own weekly limit.
  *
- * La liste est dynamique : un compte qui n'expose que deux limites affiche
- * deux anneaux. Une limite absente n'est jamais rendue en zero trompeur.
+ * The list is dynamic. An account exposing two limits shows two rings, and a
+ * missing limit is never rendered as a misleading zero.
+ *
+ * Gauges carry structure, not wording: labels are the interface's business,
+ * so the same data can be shown in any language.
  */
 function normalize(raw) {
   const gauges = [];
@@ -106,8 +106,6 @@ function normalize(raw) {
       id: 'session',
       kind: 'session',
       icon: 'claude',
-      title: 'Session en cours',
-      subtitle: 'Tous modèles, fenêtre de 5 h',
       percent: pct(raw.five_hour),
       resetsAt: raw.five_hour.resets_at,
       resetStyle: 'relative',
@@ -120,8 +118,6 @@ function normalize(raw) {
       id: 'weekly',
       kind: 'weekly',
       icon: 'week',
-      title: 'Tous modèles',
-      subtitle: 'Quota hebdomadaire commun',
       percent: pct(raw.seven_day),
       resetsAt: raw.seven_day.resets_at,
       resetStyle: 'absolute',
@@ -129,8 +125,8 @@ function normalize(raw) {
     });
   }
 
-  // Un anneau par modele. Deux sources possibles selon les comptes : les blocs
-  // nommes seven_day_<modele>, et les entrees weekly_scoped du tableau limits.
+  // One ring per model, from either of the two shapes the API uses depending
+  // on the account: seven_day_<model> blocks, and weekly_scoped entries.
   const seen = new Set();
   const addModel = (name, percent, resetsAt, active) => {
     const key = String(name).toLowerCase();
@@ -142,8 +138,6 @@ function normalize(raw) {
       icon: 'model',
       monogram: monogram(name),
       model: name,
-      title: name,
-      subtitle: 'Quota hebdomadaire propre à ce modèle',
       percent,
       resetsAt,
       resetStyle: 'absolute',
@@ -161,23 +155,21 @@ function normalize(raw) {
     if (name) addModel(name, pct({ utilization: limit.percent }), limit.resets_at, limit.is_active);
   }
 
-  // Quelle limite mord en ce moment : utile pour la mettre en avant.
+  // Which limit is biting right now: worth pointing out, it is the one that
+  // will cut you off first.
   const activeLimit = (raw.limits || []).find((l) => l.is_active === true);
   if (activeLimit) {
     const group = activeLimit.kind === 'session' ? 'session'
       : activeLimit.kind === 'weekly_all' ? 'weekly' : null;
-    if (group) {
-      const g = gauges.find((x) => x.id === group);
-      if (g) g.active = true;
-    }
+    const g = group && gauges.find((x) => x.id === group);
+    if (g) g.active = true;
   }
 
-  const extra = raw.extra_usage || {};
   return {
     ok: true,
     fetchedAt: Date.now(),
     gauges,
-    extraUsageEnabled: extra.is_enabled === true
+    extraUsageEnabled: (raw.extra_usage || {}).is_enabled === true
   };
 }
 
@@ -187,13 +179,12 @@ async function fetchUsage() {
     return { ok: false, reason: 'no-credentials', fetchedAt: Date.now(), gauges: [] };
   }
   if (cred.expiresAt && cred.expiresAt < Date.now()) {
-    // Claude Code renouvelle ce jeton tout seul. On ne le fait surtout pas a sa
-    // place : faire tourner le refresh token invaliderait sa session.
+    // Claude Code refreshes this token on its own. We deliberately do not do it
+    // for them: rotating the refresh token would invalidate their session.
     return { ok: false, reason: 'token-expired', fetchedAt: Date.now(), gauges: [] };
   }
   try {
-    const raw = await httpsGetJson(cred.accessToken);
-    return normalize(raw);
+    return normalize(await httpsGetJson(cred.accessToken));
   } catch (err) {
     const reason = /HTTP 401|HTTP 403/.test(err.message) ? 'unauthorized' : 'network';
     return { ok: false, reason, detail: err.message, fetchedAt: Date.now(), gauges: [] };

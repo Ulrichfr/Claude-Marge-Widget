@@ -1,24 +1,25 @@
 'use strict';
 /**
- * Geometrie et regles de survol, sans aucune dependance a Electron.
- * Isole ici pour etre testable : c'est la partie ou une erreur d'un pixel
- * rend le widget impossible a ouvrir, ou au contraire le fait surgir sans arret.
+ * Layout and hover rules, with no dependency on Electron.
+ * Kept separate so it can be tested: this is the part where a one pixel
+ * mistake either makes the widget impossible to open, or makes it pop up
+ * constantly.
  */
 
 const G = {
   pillWidth: 92,
   windowWidth: 700,
   ringToLabel: 10,
-  hotEdge: 4,          // largeur de la bande declencheuse, en pixels
-  hideGrace: 380,      // ms de sursis avant disparition
-  keepAliveLeft: 460,  // la bulle vit a gauche de la pilule
+  hotEdge: 4,          // width of the trigger strip, in pixels
+  hideGrace: 380,      // grace period before hiding, in ms
+  keepAliveLeft: 460,  // the panel lives to the left of the pill
   keepAliveMargin: 44
 };
 
 /**
- * Paliers de densite. Le premier qui tient dans la hauteur disponible gagne.
- * Un compte qui expose six quotas sur un ecran de portable doit rester lisible,
- * pas deborder en bas de l'ecran.
+ * Density steps. The first one that fits the available height wins.
+ * An account exposing six quotas on a laptop screen has to stay readable
+ * rather than run off the bottom of the display.
  */
 const STEPS = [
   { ring: 60, label: 22, rowGap: 26, pillPadding: 22, windowPadding: 90 },
@@ -34,7 +35,7 @@ function measure(step, rows) {
   return { ...step, rows, pillHeight: pill, windowHeight: pill + 2 * step.windowPadding };
 }
 
-/** La disposition retenue pour ce nombre d'anneaux sur cet ecran. */
+/** The layout chosen for this many rings on this screen. */
 function layout(workArea, rows) {
   const available = workArea && workArea.height ? workArea.height : 1080;
   for (const step of STEPS) {
@@ -44,7 +45,7 @@ function layout(workArea, rows) {
   return measure(STEPS[STEPS.length - 1], rows);
 }
 
-/** Position de la fenetre : collee au bord droit, ancree verticalement. */
+/** Window placement: flush against the right edge, anchored vertically. */
 function boundsForDisplay(workArea, rows, verticalAnchor) {
   const m = layout(workArea, rows);
   const slack = Math.max(0, workArea.height - m.windowHeight);
@@ -56,7 +57,7 @@ function boundsForDisplay(workArea, rows, verticalAnchor) {
   };
 }
 
-/** La bande verticale reellement occupee par la pilule, en coordonnees ecran. */
+/** The vertical band the pill actually occupies, in screen coordinates. */
 function pillBand(workArea, rows, verticalAnchor) {
   const m = layout(workArea, rows);
   const b = boundsForDisplay(workArea, rows, verticalAnchor);
@@ -70,8 +71,9 @@ function pillBand(workArea, rows, verticalAnchor) {
 }
 
 /**
- * Un ecran dont le bord droit touche un autre ecran n'est pas un vrai bord :
- * y declencher le widget le ferait surgir en plein milieu d'un bureau double.
+ * A display whose right edge touches another display has no real edge there:
+ * triggering on it would make the widget pop up in the middle of a dual
+ * monitor desktop.
  */
 function isOuterRightEdge(display, all) {
   const right = display.bounds.x + display.bounds.width;
@@ -82,14 +84,14 @@ function isOuterRightEdge(display, all) {
     d.bounds.y + d.bounds.height > display.bounds.y);
 }
 
-/** Le curseur est-il dans la bande declencheuse du bord droit ? */
+/** Is the cursor inside the right edge trigger strip? */
 function inHotZone(cursor, workArea, rows, verticalAnchor) {
   const band = pillBand(workArea, rows, verticalAnchor);
   return cursor.x >= band.right - G.hotEdge &&
     cursor.y >= band.top && cursor.y <= band.bottom;
 }
 
-/** Une fois ouvert, le widget reste tant que le curseur est dans cette zone. */
+/** Once open, the widget stays as long as the cursor is inside this area. */
 function insideKeepAlive(cursor, winBounds, rows, workArea) {
   const m = layout(workArea || { height: winBounds.height }, rows);
   const pillLeft = winBounds.x + winBounds.width - G.pillWidth;

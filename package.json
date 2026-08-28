@@ -17,7 +17,7 @@
     "electron": "^33.2.0"
   },
   "build": {
-    "appId": "com.ulrichrozier.marge",
+    "appId": "com.claudemarge.widget",
     "productName": "Claude Marge Widget",
     "files": [
       "src/**/*",
@@ -39,5 +39,10 @@
       ],
       "category": "Utility"
     }
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ulrichfr/Claude-Marge-Widget.git"
+  },
+  "homepage": "https://github.com/Ulrichfr/Claude-Marge-Widget"
 }

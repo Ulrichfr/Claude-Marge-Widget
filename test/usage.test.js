@@ -1,6 +1,6 @@
 'use strict';
-/* Tests de la normalisation. La reponse de l'API varie selon les comptes :
-   ce qui compte est qu'un quota absent ne devienne jamais un zero affiche. */
+/* Normalisation. The API answer varies from account to account; what matters
+   is that a missing quota never turns into a displayed zero. */
 
 const assert = require('assert');
 const { normalize } = require('../src/usage');
@@ -16,20 +16,20 @@ const base = {
   extra_usage: { is_enabled: false }
 };
 
-test('les pourcentages sont arrondis et bornes', () => {
+test('percentages are rounded and clamped', () => {
   const r = normalize({ ...base, five_hour: { utilization: 73.4, resets_at: null } });
   assert.strictEqual(r.gauges[0].percent, 73);
   const over = normalize({ ...base, five_hour: { utilization: 140, resets_at: null } });
   assert.strictEqual(over.gauges[0].percent, 100);
 });
 
-test('un quota absent ne produit pas d anneau', () => {
+test('a missing quota produces no ring', () => {
   const r = normalize({ ...base, seven_day: null });
   assert.strictEqual(r.gauges.filter((x) => x.id === 'weekly').length, 0);
   assert.ok(r.gauges.every((x) => x.percent !== null));
 });
 
-test('chaque modele a son propre anneau', () => {
+test('every model gets its own ring', () => {
   const r = normalize({
     ...base,
     seven_day_opus: { utilization: 94, resets_at: '2026-09-02T09:59:59Z' },
@@ -40,18 +40,18 @@ test('chaque modele a son propre anneau', () => {
   assert.deepStrictEqual(r.gauges.filter((x) => x.kind === 'model').map((x) => x.monogram), ['O', 'S']);
 });
 
-test('un modele expose par limits[] est repris', () => {
+test('a model exposed through limits[] is picked up', () => {
   const r = normalize({
     ...base,
     limits: [{ kind: 'weekly_scoped', percent: 6, resets_at: '2026-09-02T09:59:59Z',
       is_active: false, scope: { model: { display_name: 'Fable' } } }]
   });
   const fable = r.gauges.find((x) => x.model === 'Fable');
-  assert.ok(fable, 'Fable manquant');
+  assert.ok(fable, 'Fable missing');
   assert.strictEqual(fable.percent, 6);
 });
 
-test('un modele present des deux cotes n apparait qu une fois', () => {
+test('a model present in both shapes appears once', () => {
   const r = normalize({
     ...base,
     seven_day_opus: { utilization: 94, resets_at: null },
@@ -61,7 +61,7 @@ test('un modele present des deux cotes n apparait qu une fois', () => {
   assert.strictEqual(r.gauges.filter((x) => x.model === 'Opus').length, 1);
 });
 
-test('la limite qui mord est signalee', () => {
+test('the biting limit is flagged', () => {
   const r = normalize({
     ...base,
     limits: [{ kind: 'weekly_all', percent: 12, is_active: true, resets_at: null, scope: null }]
@@ -70,9 +70,9 @@ test('la limite qui mord est signalee', () => {
   assert.strictEqual(r.gauges.find((x) => x.id === 'session').active, false);
 });
 
-test('une reponse vide ne fait pas tomber la normalisation', () => {
+test('an empty response does not break normalisation', () => {
   const r = normalize({});
   assert.strictEqual(r.ok, true);
   assert.deepStrictEqual(r.gauges, []);
 });
-console.log(`\n${passed} tests de normalisation passes`);
+console.log(`\n${passed} normalisation tests passed`);

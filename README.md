@@ -1,117 +1,192 @@
+<div align="center">
+
 # Claude Marge Widget
 
-Widget collé au bord droit de l'écran. Il apparaît quand la souris touche le
-bord, montre où en sont les quotas Claude Max, et disparaît dès qu'on s'en va.
+**Your Claude Max limits, at the edge of the screen.**
+Touch the right edge with your mouse and it slides in. Move away and it is gone.
 
-Un anneau par quota, et les quotas ne sont pas les mêmes selon le modèle :
-la session de 5 heures, le total hebdomadaire, puis un anneau par modèle
-(Opus, Sonnet, Fable...) avec sa propre limite. La liste est construite à
-partir de ce que le compte expose réellement, elle n'est pas figée dans le code.
+<img src="docs/hero.png" alt="The widget revealed at the right edge of the screen, showing session, weekly and per-model limits" width="820">
 
-## Le nom
+[![macOS](https://img.shields.io/badge/macOS-12%2B-000?logo=apple&logoColor=white)](#compatibility)
+[![Linux](https://img.shields.io/badge/Linux-X11-000?logo=linux&logoColor=white)](#compatibility)
+[![Node](https://img.shields.io/badge/Node-18%2B-000?logo=nodedotjs&logoColor=white)](#compatibility)
+[![License](https://img.shields.io/badge/License-MIT-000)](LICENSE)
 
-La marge, c'est ce qu'il reste avant de taper le plafond, et c'est aussi
-l'endroit où le widget vit : ce ruban à droite de l'écran où rien d'autre ne
-se passe.
+[Français](README.fr.md)
 
-## D'où viennent les chiffres
+</div>
 
-De l'endpoint officiel utilisé par Claude Code lui-même :
+---
 
-    GET https://api.anthropic.com/api/oauth/usage
+## Install in one command
 
-Le jeton OAuth est lu là où Claude Code le range : le Trousseau sur macOS,
-`~/.claude/.credentials.json` ailleurs. Il n'est ni copié, ni mis en cache sur
-disque, ni envoyé ailleurs qu'à `api.anthropic.com`.
+```bash
+curl -fsSL https://raw.githubusercontent.com/Ulrichfr/Claude-Marge-Widget/main/install.sh | bash
+```
 
-Le nom du service Trousseau a changé selon les versions : le widget essaie
-`Claude Code-credentials` (Claude Code 2.1 et suivants) puis `Claude Code`,
-avant de se rabattre sur le fichier.
+That is the whole setup. The script checks Node, clones into `~/.claude-marge`,
+installs dependencies, runs the test suite, registers a login item, starts the
+widget, and tells you whether it found your Claude session.
 
-Une lecture du Trousseau **échoue depuis SSH**, quel que soit le nom : macOS
-refuse l'accès hors session graphique. Ce n'est pas un défaut du widget, qui
-tourne lui dans la session de l'utilisateur. Pour vérifier son état à distance,
-lire son journal plutôt que tenter la lecture soi-même :
+Then move your mouse to the **right edge of the screen, halfway down**.
 
-    tail /tmp/marge.log
+Prefer to read the script before piping it into a shell? Fair enough:
 
-Il n'écrit une ligne qu'au changement d'état, jamais à chaque minute.
+```bash
+git clone https://github.com/Ulrichfr/Claude-Marge-Widget.git ~/.claude-marge
+cd ~/.claude-marge && npm install && npm test
+bash install.sh
+```
 
-Le widget ne renouvelle jamais le jeton lui-même : faire tourner le jeton de
-rafraîchissement invaliderait la session de Claude Code. Quand il a expiré, le
-widget le dit et il suffit d'ouvrir Claude Code une fois.
+Removing it is one command too, and it never touches your Claude credentials:
 
-Pour voir les données brutes sans lancer l'interface :
+```bash
+bash ~/.claude-marge/uninstall.sh
+```
 
-    npm run usage
+---
 
-## Lancer
+## One ring per quota, because they are not the same quota
 
-    npm install
-    npm start          # attend le survol du bord droit
-    npm run demo       # reste ouvert en permanence, pour régler la position
+Claude Max does not have a single limit. There is a rolling five hour session
+window, a weekly budget across every model, and a separate weekly budget for
+each heavy model. The one that stops you is rarely the one you were watching.
 
-Le widget ne prend jamais le focus et ne capte jamais un clic : la fenêtre est
-transparente aux événements souris de bout en bout. Le survol est déduit de la
-position du curseur, échantillonnée 22 fois par seconde.
+<img src="docs/models.png" alt="Five rings: session, all models, Opus, Sonnet and Fable, each with its own percentage" width="760">
 
-Pour quitter : l'icône dans la barre d'état, ou `pkill -f marge`.
+The list is built from what your account actually exposes, so you get two rings
+or five depending on your plan. A limit the API does not return is left out
+rather than drawn as a misleading zero, and the **active limit** badge marks the
+one that will cut you off first.
 
-## Démarrage automatique
+Colours follow the headroom, not the model: green below 35%, yellow to 69%,
+orange to 89%, red beyond.
 
-macOS :
+<img src="docs/states.png" alt="The same pill at 12%, 58% and 96% usage, green then yellow then red" width="380">
 
-    cp install/com.ulrichrozier.marge.plist ~/Library/LaunchAgents/
-    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.ulrichrozier.marge.plist
+---
 
-Pour le relancer après une modification : `launchctl kickstart -k
-gui/$(id -u)/com.ulrichrozier.marge`. Pour le retirer : `launchctl bootout
-gui/$(id -u)/com.ulrichrozier.marge`.
+## Seven languages, picked automatically
 
-Linux :
+English by default, and your system language when it is one of French, Spanish,
+German, Italian, Chinese or Japanese. Nothing to configure.
 
-    mkdir -p ~/.config/systemd/user
-    cp install/marge.service ~/.config/systemd/user/
-    systemctl --user enable --now marge
+<img src="docs/languages.png" alt="The panel rendered in French, Spanish, German, Italian, Chinese and Japanese" width="720">
 
-## Réglages
+Adding a language means adding one object to [`src/i18n.js`](src/i18n.js).
+Pull requests welcome.
 
-`~/.config/marge/config.json`, relu par « Recharger la configuration »
-dans le menu de la barre d'état :
+---
 
-    {
-      "verticalAnchor": 0.45,        // 0 en haut de l'écran, 1 en bas
-      "refreshSeconds": 60,
-      "followCursorDisplay": true    // le widget suit l'écran où est la souris
-    }
+## How it works
 
-## Couleurs
+**Where the numbers come from.** The same endpoint Claude Code itself calls:
 
-Vert sous 35 %, jaune jusqu'à 69 %, orange jusqu'à 89 %, rouge au-delà.
-Le badge « limite active » signale le quota qui mord en ce moment, c'est-à-dire
-celui qui coupera en premier.
+```
+GET https://api.anthropic.com/api/oauth/usage
+```
 
-## Ce qui est vérifié
+These are your real limits, not an estimate reconstructed from token counts.
 
-`npm test` (21 tests) couvre les deux endroits où une erreur se voit tout de suite :
+**Where the token comes from.** Wherever Claude Code keeps it: the Keychain on
+macOS, `~/.claude/.credentials.json` elsewhere. It is never copied, never cached
+on disk, and never sent anywhere other than `api.anthropic.com`.
 
-- la géométrie du survol (14 tests) : bord droit d'un écran multi-moniteurs,
-  fenêtre qui reste dans l'écran quel que soit le nombre de modèles, et surtout
-  l'absence de clignotement, la zone qui garde le widget ouvert contenant
-  toujours la bande qui le déclenche ;
-- la normalisation des quotas : un quota absent ne devient jamais un zéro
-  affiché, un modèle exposé deux fois par l'API n'apparaît qu'une fois.
+The widget never refreshes the token itself. Rotating the refresh token would
+invalidate your Claude Code session, so when it has expired the widget says so
+and you simply open Claude Code once.
 
-Une capture du rendu réel, hors compositeur, se prend avec :
+**How the hover works.** The window is *always* click-through. It never takes
+focus and never swallows a click, even while visible. Hover is derived from
+sampling the cursor position 22 times a second in the main process, then handed
+to the page, which does its own hit-testing. It is the only approach that
+behaves identically on macOS and X11.
 
-    MARGE_CAPTURE=/tmp/widget.png npm run demo
+**How it stays out of the way.** The window is transparent, frameless, has no
+shadow, no taskbar entry, and no Dock icon. It resizes itself to the number of
+quotas your account exposes, and tightens its layout on short screens instead of
+running off the bottom.
 
-## Limites connues
+---
 
-- Sous Wayland, Electron ne peut pas positionner ses fenêtres. Le service
-  systemd force X11 ; en lancement manuel, ajouter
-  `ELECTRON_OZONE_PLATFORM_HINT=x11`.
-- Sur X11 sans compositeur, la transparence tombe : le fond de la pilule
-  s'affiche noir opaque au lieu de se fondre dans le bureau.
-- L'icône de barre d'état a besoin de `libappindicator` sur Linux. Sans elle,
-  le widget fonctionne, il n'y a simplement pas de menu.
+## Compatibility
+
+| System | State | Notes |
+|---|---|---|
+| **macOS 12+** (Intel and Apple Silicon) | Supported, tested | Tested on macOS 26.5 arm64. Installs a LaunchAgent. |
+| **Linux, X11** | Supported, tested | Installs a systemd user service. |
+| **Linux, Wayland** | Partial | Electron cannot position windows under Wayland. The service forces X11; launch manually with `ELECTRON_OZONE_PLATFORM_HINT=x11`. |
+| **Windows** | Not supported | The data layer would work, the placement and autostart are not written or tested. Contributions welcome. |
+
+Requirements: **Node.js 18+**, `git`, and Claude Code signed in to a Claude
+account with usage limits (Pro or Max).
+
+Two Linux details worth knowing. Without a compositor, transparency falls back
+to an opaque black pill instead of blending into the desktop. And the tray icon
+needs `libappindicator`; without it the widget still runs, there is simply no
+menu.
+
+---
+
+## Configuration
+
+`~/.config/claude-marge/config.json`, reloaded from the tray menu:
+
+```json
+{
+  "verticalAnchor": 0.45,
+  "refreshSeconds": 60,
+  "followCursorDisplay": true
+}
+```
+
+`verticalAnchor` is 0 at the top of the screen and 1 at the bottom.
+`followCursorDisplay` makes the widget appear on whichever display holds the
+mouse. On a multi-monitor setup, only real outer edges trigger it: the seam
+between two side-by-side screens never does.
+
+Useful commands:
+
+```bash
+npm start                      # hover behaviour
+npm run demo                   # stays open, handy for positioning
+npm run usage                  # raw quotas as JSON, no interface
+npm test                       # 21 tests
+tail ~/.claude-marge/widget.log   # one line per state change
+```
+
+---
+
+## What is verified
+
+`npm test` covers the two places where a mistake shows up immediately.
+
+**Hover geometry, 14 tests.** The right edge of a multi-monitor setup, the
+window staying on screen whatever the number of models, and above all the
+absence of flicker: the area that keeps the widget open must always contain the
+strip that triggers it.
+
+**Quota normalisation, 7 tests.** A missing quota never becomes a displayed
+zero, a model exposed twice by the API appears once, and an empty response does
+not bring the widget down.
+
+For a render check on a machine with no compositor, or in CI:
+
+```bash
+MARGE_CAPTURE=/tmp/widget.png npm run demo
+```
+
+---
+
+## Privacy
+
+The widget makes exactly one network call, to `api.anthropic.com`, with your own
+token, to read your own usage. No telemetry, no analytics, no third party. The
+log records percentages and state changes, never the token.
+
+---
+
+## License and attribution
+
+[MIT](LICENSE). An unofficial personal project, not affiliated with, endorsed
+by, or supported by Anthropic. "Claude" is a trademark of Anthropic.

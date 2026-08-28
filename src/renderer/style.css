@@ -1,7 +1,7 @@
-/* Widget de bord d'ecran. Tout est peint sur un fond transparent : la fenetre
-   Electron n'a ni cadre ni ombre, seules les formes noires ci-dessous se
-   voient. Les durees sont volontairement courtes a la sortie et plus amples a
-   l'entree, pour que l'apparition soit remarquee et la disparition oubliee. */
+/* Screen edge widget. Everything is painted on a transparent background: the
+   Electron window has no frame and no shadow, only the black shapes below are
+   visible. Durations are deliberately short on the way out and generous on the
+   way in, so the arrival is noticed and the departure is forgotten. */
 
 :root {
   --pill-bg: #060607;
@@ -28,8 +28,12 @@ html, body {
   cursor: default;
   user-select: none;
   -webkit-font-smoothing: antialiased;
+  /* System faces first, then CJK fallbacks so Chinese and Japanese render
+     with the right shapes instead of tofu boxes. */
   font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Inter",
-    "Segoe UI Variable", system-ui, "Cantarell", "Helvetica Neue", sans-serif;
+    "Segoe UI Variable", system-ui, "Cantarell", "Helvetica Neue",
+    "PingFang SC", "Hiragino Sans", "Noto Sans CJK SC", "Noto Sans CJK JP",
+    "Microsoft YaHei", "Meiryo", sans-serif;
 }
 
 .stage {
@@ -40,7 +44,7 @@ html, body {
   justify-content: flex-end;
 }
 
-/* --- La pilule ----------------------------------------------------------- */
+/* --- The pill ------------------------------------------------------------ */
 
 .pill {
   position: relative;
@@ -64,7 +68,7 @@ html, body {
   transition: transform 460ms var(--ease-in), opacity 240ms linear;
 }
 
-/* --- Un anneau ----------------------------------------------------------- */
+/* --- One ring ------------------------------------------------------------ */
 
 .item {
   display: flex;
@@ -131,7 +135,7 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 
-/* --- La bulle ------------------------------------------------------------ */
+/* --- The panel ----------------------------------------------------------- */
 
 .panel {
   position: absolute;

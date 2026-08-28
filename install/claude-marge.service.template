@@ -1,0 +1,18 @@
+[Unit]
+Description=Claude Marge Widget
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+# Electron cannot position windows under Wayland, so force X11.
+Environment=ELECTRON_OZONE_PLATFORM_HINT=x11
+WorkingDirectory=__APP_DIR__
+# Call the Electron binary directly: the npm launcher is a Node script, and
+# systemd starts with a minimal PATH that has no node in it.
+ExecStart=__APP_DIR__/node_modules/electron/dist/electron __APP_DIR__
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
