@@ -30,6 +30,8 @@
       stale: (t) => `Last read at ${t}`,
       notifyTitle: (level) => `Claude usage at ${level}%`,
       notifyBody: (name, percent) => `${name} is at ${percent}% of its limit.`,
+      updateTitle: 'Claude Marge update',
+      updateBody: (short) => `Version ${short} is ready. Open Settings to install it.`,
       errors: {
         loading: 'Reading your usage.',
         'no-credentials': 'No Claude session on this machine. Run <b>claude</b> once and sign in.',
@@ -48,6 +50,7 @@
         startAtLogin: 'Start at login',
         restartNow: 'Restart the widget',
         pin: 'Keep visible',
+        update: 'Check for updates…',
         quit: 'Quit'
       },
       settings: {
@@ -82,6 +85,19 @@
         minutes: 'min',
         file: 'Configuration file',
         revealShort: 'Reveal',
+        updates: 'Updates',
+        installed: 'Installed',
+        checkNow: 'Check now',
+        checking: 'Checking…',
+        upToDate: 'Up to date',
+        updateAvailable: 'An update is available',
+        updateNow: 'Update and restart',
+        updating: 'Updating…',
+        updateOk: 'Updated. Restarting…',
+        updateFailed: 'Update failed. Nothing changed.',
+        updateDirty: 'This copy has local changes. Update refused.',
+        notCheckout: 'Not installed from git, so it cannot update itself.',
+        autoCheck: 'Check daily',
         close: 'Close'
       }
     },
@@ -102,6 +118,8 @@
       stale: (t) => `Dernière lecture à ${t}`,
       notifyTitle: (level) => `Consommation Claude à ${level} %`,
       notifyBody: (name, percent) => `${name} est à ${percent} % de sa limite.`,
+      updateTitle: 'Mise à jour Claude Marge',
+      updateBody: (short) => `La version ${short} est prête. Ouvre les Réglages pour l'installer.`,
       errors: {
         loading: 'Lecture de la consommation en cours.',
         'no-credentials': 'Aucune session Claude sur cette machine. Lance <b>claude</b> une fois pour te connecter.',
@@ -120,6 +138,7 @@
         startAtLogin: 'Lancer au démarrage',
         restartNow: 'Relancer le widget',
         pin: 'Garder visible',
+        update: 'Rechercher des mises à jour…',
         quit: 'Quitter'
       },
       settings: {
@@ -154,6 +173,19 @@
         minutes: 'min',
         file: 'Fichier de configuration',
         revealShort: 'Montrer',
+        updates: 'Mises à jour',
+        installed: 'Installé',
+        checkNow: 'Vérifier',
+        checking: 'Vérification…',
+        upToDate: 'À jour',
+        updateAvailable: 'Une mise à jour est disponible',
+        updateNow: 'Mettre à jour et relancer',
+        updating: 'Mise à jour…',
+        updateOk: 'Mis à jour. Relance…',
+        updateFailed: 'Échec de la mise à jour. Rien n\'a changé.',
+        updateDirty: 'Cette copie a des modifications locales. Mise à jour refusée.',
+        notCheckout: 'Pas installé depuis git, la mise à jour automatique est impossible.',
+        autoCheck: 'Vérifier chaque jour',
         close: 'Fermer'
       }
     },
@@ -174,6 +206,8 @@
       stale: (t) => `Última lectura a las ${t}`,
       notifyTitle: (level) => `Consumo de Claude al ${level} %`,
       notifyBody: (name, percent) => `${name} está al ${percent} % de su límite.`,
+      updateTitle: 'Actualización de Claude Marge',
+      updateBody: (short) => `La versión ${short} está lista. Abre Ajustes para instalarla.`,
       errors: {
         loading: 'Leyendo tu consumo.',
         'no-credentials': 'No hay sesión de Claude en este equipo. Ejecuta <b>claude</b> una vez e inicia sesión.',
@@ -192,6 +226,7 @@
         startAtLogin: 'Iniciar al arrancar',
         restartNow: 'Reiniciar el widget',
         pin: 'Mantener visible',
+        update: 'Buscar actualizaciones…',
         quit: 'Salir'
       },
       settings: {
@@ -226,6 +261,19 @@
         minutes: 'min',
         file: 'Archivo de configuración',
         revealShort: 'Mostrar',
+        updates: 'Actualizaciones',
+        installed: 'Instalado',
+        checkNow: 'Comprobar',
+        checking: 'Comprobando…',
+        upToDate: 'Al día',
+        updateAvailable: 'Hay una actualización disponible',
+        updateNow: 'Actualizar y reiniciar',
+        updating: 'Actualizando…',
+        updateOk: 'Actualizado. Reiniciando…',
+        updateFailed: 'Fallo al actualizar. No se cambió nada.',
+        updateDirty: 'Esta copia tiene cambios locales. Actualización rechazada.',
+        notCheckout: 'No instalado desde git, no puede actualizarse solo.',
+        autoCheck: 'Comprobar a diario',
         close: 'Cerrar'
       }
     },
@@ -246,6 +294,8 @@
       stale: (t) => `Zuletzt gelesen um ${t}`,
       notifyTitle: (level) => `Claude-Verbrauch bei ${level} %`,
       notifyBody: (name, percent) => `${name} liegt bei ${percent} % des Limits.`,
+      updateTitle: 'Claude Marge Update',
+      updateBody: (short) => `Version ${short} ist bereit. Zum Installieren die Einstellungen öffnen.`,
       errors: {
         loading: 'Verbrauch wird gelesen.',
         'no-credentials': 'Keine Claude-Sitzung auf diesem Rechner. Starte <b>claude</b> einmal und melde dich an.',
@@ -264,6 +314,7 @@
         startAtLogin: 'Beim Anmelden starten',
         restartNow: 'Widget neu starten',
         pin: 'Sichtbar lassen',
+        update: 'Nach Updates suchen…',
         quit: 'Beenden'
       },
       settings: {
@@ -298,6 +349,19 @@
         minutes: 'Min',
         file: 'Konfigurationsdatei',
         revealShort: 'Anzeigen',
+        updates: 'Updates',
+        installed: 'Installiert',
+        checkNow: 'Prüfen',
+        checking: 'Wird geprüft…',
+        upToDate: 'Aktuell',
+        updateAvailable: 'Ein Update ist verfügbar',
+        updateNow: 'Aktualisieren und neu starten',
+        updating: 'Wird aktualisiert…',
+        updateOk: 'Aktualisiert. Neustart…',
+        updateFailed: 'Update fehlgeschlagen. Nichts wurde geändert.',
+        updateDirty: 'Diese Kopie hat lokale Änderungen. Update abgelehnt.',
+        notCheckout: 'Nicht aus git installiert, kein Selbstupdate möglich.',
+        autoCheck: 'Täglich prüfen',
         close: 'Schließen'
       }
     },
@@ -318,6 +382,8 @@
       stale: (t) => `Ultima lettura alle ${t}`,
       notifyTitle: (level) => `Consumo Claude al ${level} %`,
       notifyBody: (name, percent) => `${name} è al ${percent} % del limite.`,
+      updateTitle: 'Aggiornamento Claude Marge',
+      updateBody: (short) => `La versione ${short} è pronta. Apri le Impostazioni per installarla.`,
       errors: {
         loading: 'Lettura del consumo in corso.',
         'no-credentials': 'Nessuna sessione Claude su questa macchina. Avvia <b>claude</b> una volta e accedi.',
@@ -336,6 +402,7 @@
         startAtLogin: 'Avvia all\'accesso',
         restartNow: 'Riavvia il widget',
         pin: 'Mantieni visibile',
+        update: 'Cerca aggiornamenti…',
         quit: 'Esci'
       },
       settings: {
@@ -370,6 +437,19 @@
         minutes: 'min',
         file: 'File di configurazione',
         revealShort: 'Mostra',
+        updates: 'Aggiornamenti',
+        installed: 'Installato',
+        checkNow: 'Controlla',
+        checking: 'Controllo…',
+        upToDate: 'Aggiornato',
+        updateAvailable: 'È disponibile un aggiornamento',
+        updateNow: 'Aggiorna e riavvia',
+        updating: 'Aggiornamento…',
+        updateOk: 'Aggiornato. Riavvio…',
+        updateFailed: 'Aggiornamento fallito. Nulla è cambiato.',
+        updateDirty: 'Questa copia ha modifiche locali. Aggiornamento rifiutato.',
+        notCheckout: 'Non installato da git, non può aggiornarsi da solo.',
+        autoCheck: 'Controlla ogni giorno',
         close: 'Chiudi'
       }
     },
@@ -390,6 +470,8 @@
       stale: (t) => `上次读取 ${t}`,
       notifyTitle: (level) => `Claude 用量已达 ${level}%`,
       notifyBody: (name, percent) => `${name} 已用至上限的 ${percent}%。`,
+      updateTitle: 'Claude Marge 更新',
+      updateBody: (short) => `版本 ${short} 已就绪。打开设置进行安装。`,
       errors: {
         loading: '正在读取用量。',
         'no-credentials': '此设备上没有 Claude 会话。请运行一次 <b>claude</b> 并登录。',
@@ -408,6 +490,7 @@
         startAtLogin: '登录时启动',
         restartNow: '重启小组件',
         pin: '保持显示',
+        update: '检查更新…',
         quit: '退出'
       },
       settings: {
@@ -442,6 +525,19 @@
         minutes: '分钟',
         file: '配置文件',
         revealShort: '显示',
+        updates: '更新',
+        installed: '已安装',
+        checkNow: '检查',
+        checking: '检查中…',
+        upToDate: '已是最新',
+        updateAvailable: '有可用更新',
+        updateNow: '更新并重启',
+        updating: '更新中…',
+        updateOk: '已更新，正在重启…',
+        updateFailed: '更新失败，未做任何更改。',
+        updateDirty: '此副本有本地修改，已拒绝更新。',
+        notCheckout: '并非通过 git 安装，无法自动更新。',
+        autoCheck: '每天检查',
         close: '关闭'
       }
     },
@@ -462,6 +558,8 @@
       stale: (t) => `最終取得 ${t}`,
       notifyTitle: (level) => `Claude の使用量が ${level}%`,
       notifyBody: (name, percent) => `${name} は上限の ${percent}% です。`,
+      updateTitle: 'Claude Marge のアップデート',
+      updateBody: (short) => `バージョン ${short} が利用できます。設定を開いてインストールしてください。`,
       errors: {
         loading: '使用量を読み込んでいます。',
         'no-credentials': 'このマシンに Claude のセッションがありません。<b>claude</b> を一度実行してサインインしてください。',
@@ -480,6 +578,7 @@
         startAtLogin: 'ログイン時に起動',
         restartNow: 'ウィジェットを再起動',
         pin: '表示したままにする',
+        update: 'アップデートを確認…',
         quit: '終了'
       },
       settings: {
@@ -514,6 +613,19 @@
         minutes: '分',
         file: '設定ファイル',
         revealShort: '表示',
+        updates: 'アップデート',
+        installed: 'インストール済み',
+        checkNow: '確認',
+        checking: '確認中…',
+        upToDate: '最新です',
+        updateAvailable: 'アップデートがあります',
+        updateNow: '更新して再起動',
+        updating: '更新中…',
+        updateOk: '更新しました。再起動します…',
+        updateFailed: '更新に失敗しました。変更はありません。',
+        updateDirty: 'このコピーにはローカル変更があります。更新を中止しました。',
+        notCheckout: 'git からインストールされていないため自動更新できません。',
+        autoCheck: '毎日確認',
         close: '閉じる'
       }
     }

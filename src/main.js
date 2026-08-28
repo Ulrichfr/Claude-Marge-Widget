@@ -22,6 +22,7 @@ const { nextDelay, shouldRefreshOnReveal } = require('./schedule');
 const autostart = require('./autostart');
 const store = require('./state');
 const alerts = require('./alerts');
+const updater = require('./updater');
 const {
   G, layout, boundsForDisplay: computeBounds,
   isOuterRightEdge, inHotZone, insideKeepAlive
@@ -39,6 +40,7 @@ const DEFAULTS = {
   refreshSeconds: 120,
   followCursorDisplay: true, // show up on whichever display holds the cursor
   language: 'auto',          // 'auto', or one of the codes in src/i18n.js
+  checkUpdates: true,        // look for a new commit once a day, and say so
   alertAt: [80, 95],         // notify once when a quota crosses these marks
   shortcut: 'CommandOrControl+Shift+M' // toggle pinned mode; '' disables it
 };
@@ -391,6 +393,7 @@ function buildMenu() {
       click: (item) => setPinned(item.checked)
     },
     { label: MENU.restartNow, click: () => autostart.restartNow() },
+    { label: MENU.update, click: () => { openSettings(); checkForUpdates({ notify: true }); } },
     { type: 'separator' },
     { label: MENU.open, click: () => openSettings() },
     { label: MENU.reveal, click: () => revealConfig() },
@@ -430,6 +433,41 @@ function registerShortcut() {
   } catch (_) {
     // An invalid or already taken accelerator must not stop the widget.
   }
+}
+
+// --- Updates -----------------------------------------------------------------
+
+const APP_DIR = path.join(__dirname, '..');
+const DAY_MS = 24 * 60 * 60 * 1000;
+let updateTimer = null;
+
+/**
+ * The daily look. It only ever notifies, never installs: pulling code onto
+ * someone's machine without them asking is not an update, it is a surprise.
+ * Each version is announced once, so a widget left running for a week does not
+ * repeat itself every day.
+ */
+async function checkForUpdates({ notify }) {
+  const result = await updater.check(APP_DIR);
+  if (notify && result.state === 'available') {
+    const announced = store.read().announcedUpdate;
+    if (announced !== result.remote.sha && Notification.isSupported()) {
+      new Notification({
+        title: T.updateTitle,
+        body: T.updateBody(result.remote.short)
+      }).show();
+      store.save({ announcedUpdate: result.remote.sha });
+    }
+  }
+  return result;
+}
+
+function scheduleUpdateCheck() {
+  clearTimeout(updateTimer);
+  if (config.checkUpdates === false) return;
+  updateTimer = setTimeout(() => {
+    checkForUpdates({ notify: true }).finally(scheduleUpdateCheck);
+  }, DAY_MS);
 }
 
 // --- Settings window ---------------------------------------------------------
@@ -487,6 +525,7 @@ function applyConfig(next) {
 
   placeOn(activeDisplay());
   buildMenu();
+  scheduleUpdateCheck();
   clearTimeout(refreshTimer);
   refreshTimer = setTimeout(refresh, nextDelay({ ok: failures === 0 }, failures, config.refreshSeconds));
 }
@@ -518,6 +557,9 @@ app.whenReady().then(() => {
   registerShortcut();
   // Waking from sleep with hours-old numbers is worse than one extra call.
   powerMonitor.on('resume', () => { failures = 0; refresh(); });
+  scheduleUpdateCheck();
+  // One look shortly after start, once the widget has settled.
+  setTimeout(() => { if (config.checkUpdates !== false) checkForUpdates({ notify: true }); }, 30000);
   if (DEMO) show(); // showcase mode: stays open, no cursor needed
 
 });
@@ -531,6 +573,21 @@ ipcMain.handle('settings:save', (_e, next) => {
   applyConfig({ ...stored, startAtLogin });
   return true;
 });
+ipcMain.handle('updates:check', () => checkForUpdates({ notify: false }));
+ipcMain.handle('updates:apply', async () => {
+  const send = (step) => {
+    if (settingsWin && !settingsWin.isDestroyed()) settingsWin.webContents.send('updates:step', step);
+  };
+  const result = await updater.apply(APP_DIR, process.execPath, send);
+  if (result.ok && result.changed) {
+    trace(`updated to ${result.short}`);
+    store.save({ announcedUpdate: result.sha });
+    // Give the window a moment to show the result before we go down with it.
+    setTimeout(() => autostart.restartNow(), 1200);
+  }
+  return result;
+});
+
 ipcMain.handle('settings:reset', () => {
   saveConfig(DEFAULTS);
   applyConfig(DEFAULTS);
@@ -567,5 +624,6 @@ app.on('window-all-closed', () => {});
 app.on('before-quit', () => {
   clearInterval(pollTimer);
   clearTimeout(refreshTimer);
+  clearTimeout(updateTimer);
   globalShortcut.unregisterAll();
 });

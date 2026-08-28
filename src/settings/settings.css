@@ -298,3 +298,21 @@ button.ghost:hover { color: var(--ink); border-color: rgba(255, 255, 255, 0.2); 
 button.primary { background: var(--ink); color: #0A0A0B; font-weight: 550; }
 button.primary:hover { background: #fff; }
 button.primary:active { transform: scale(0.98); }
+button.primary.wide { width: 100%; padding: 11px 0; }
+
+.update-note {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  padding: 2px 0 2px;
+}
+.update-note.good { color: var(--ok); }
+.update-note.bad { color: #FF6B5A; }
+.update-note b { color: var(--ink); font-weight: 550; }
+.update-note code {
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  font-size: 11.5px;
+  background: var(--field);
+  padding: 1px 5px;
+  border-radius: 5px;
+}

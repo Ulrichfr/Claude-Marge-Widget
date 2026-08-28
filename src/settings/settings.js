@@ -82,6 +82,7 @@ function paint() {
       (draft.alertAt || []).includes(Number(b.dataset.value)) ? 'true' : 'false'));
 
   paintSwitch('startAtLogin', draft.startAtLogin === true);
+  paintSwitch('autoCheck', draft.checkUpdates !== false);
   $('language').value = draft.language || 'auto';
   paintShortcut();
 }
@@ -111,6 +112,11 @@ function labels() {
   text('lblShortcut', s.shortcut);
   text('hintShortcut', s.shortcutHint);
   text('lblLanguage', s.language);
+  text('lblUpdates', s.updates);
+  text('lblInstalled', s.installed);
+  text('lblAutoCheck', s.autoCheck);
+  text('checkNow', s.checkNow);
+  text('updateNow', s.updateNow);
   text('save', s.save);
   text('savedFlag', s.saved);
   text('reset', s.reset);
@@ -176,6 +182,72 @@ $('alertsOn').onclick = () => {
   paint();
 };
 $('startAtLogin').onclick = () => { draft.startAtLogin = !draft.startAtLogin; paint(); };
+$('autoCheck').onclick = () => { draft.checkUpdates = !(draft.checkUpdates !== false); paint(); };
+
+// --- Updates ------------------------------------------------------------------
+
+function note(html, tone) {
+  const el = $('updateNote');
+  el.className = 'update-note' + (tone ? ' ' + tone : '');
+  el.innerHTML = html;
+  $('updateRow').hidden = false;
+}
+
+async function checkUpdate() {
+  const s = T.settings;
+  $('checkNow').textContent = s.checking;
+  $('checkNow').disabled = true;
+  const result = await window.settings.checkUpdate();
+  $('checkNow').textContent = s.checkNow;
+  $('checkNow').disabled = false;
+
+  $('installedSha').textContent = result.localShort ? result.localShort : '';
+  $('updateNow').hidden = true;
+
+  if (result.state === 'available') {
+    note(`<b>${s.updateAvailable}</b><br><code>${result.remote.short}</code> ${escapeHtml(result.remote.message)}`);
+    $('updateNow').hidden = false;
+  } else if (result.state === 'up-to-date') {
+    note(s.upToDate, 'good');
+  } else if (result.state === 'not-a-checkout') {
+    note(s.notCheckout, 'bad');
+  } else {
+    note(s.updateFailed, 'bad');
+  }
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"]/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+$('checkNow').onclick = checkUpdate;
+
+$('updateNow').onclick = async () => {
+  const s = T.settings;
+  $('updateNow').disabled = true;
+  note(s.updating);
+  const result = await window.settings.applyUpdate();
+  if (result.ok && result.changed) {
+    note(s.updateOk, 'good');           // the widget restarts itself from here
+  } else if (result.ok) {
+    note(s.upToDate, 'good');
+    $('updateNow').hidden = true;
+    $('updateNow').disabled = false;
+  } else {
+    const why = result.reason === 'dirty' ? s.updateDirty
+      : result.reason === 'not-a-checkout' ? s.notCheckout
+      : s.updateFailed;
+    note(why, 'bad');
+    $('updateNow').disabled = false;
+  }
+};
+
+window.settings.onUpdateStep((step) => {
+  const s = T.settings;
+  note(step === 'rolling-back' ? s.updateFailed : s.updating,
+    step === 'rolling-back' ? 'bad' : null);
+});
 
 $('shortcut').onclick = () => { recording = !recording; paintShortcut(); };
 window.addEventListener('keydown', (e) => {
@@ -209,4 +281,5 @@ window.settings.load().then((cfg) => {
   labels();
   buildControls();
   paint();
+  checkUpdate();     // the version you have is the first thing worth knowing
 });

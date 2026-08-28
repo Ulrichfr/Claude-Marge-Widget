@@ -151,24 +151,62 @@ once per level, per quota, per reset window, so a limit you are sitting above
 does not notify you every two minutes. Set it to `[]` to stay silent.
 `shortcut` toggles the pinned view; set it to `""` to register nothing.
 `language` is `auto`, or one of `en`, `fr`, `es`, `de`, `it`, `zh`, `ja`.
+`checkUpdates` turns the daily look at the repository on and off.
 
 ### Settings
 
-<img src="docs/settings.png" alt="The settings window: placement, data, alerts and system sections" width="420" align="right">
+<img src="docs/settings.png" alt="The settings window: placement, data, alerts, system and updates" width="330" align="right">
 
-Everything is in the tray menu, under **Settings**. Placement along the right
-edge, how often to check, which thresholds should warn you, the keep-visible
-shortcut, the language, and start at login.
+Everything is in the tray menu, under **Settings**. The window is 520 points
+wide and scrolls; the shot on the right shows the whole sheet.
 
-Changes apply the moment you save: no restart to see a slider move. The window
-writes the same `config.json` you can still edit by hand, and **Reveal** opens
-it.
+**Placement.** Where the pill sits along the right edge, and whether it follows
+the mouse from one display to another.
 
-The shortcut field records a real combination. Click it, press the keys, and
-Backspace clears it. A bare letter is refused, since it would fire while you
-type anywhere else.
+**Data.** How often to ask. Two minutes is the default because asking more often
+is what gets you rate limited, and these numbers do not move faster than that.
+
+**Alerts.** Which marks should warn you before the ceiling. Each one speaks once
+per quota per reset window, so a limit you are already sitting above does not
+notify you every two minutes.
+
+**System.** Start at login, the language, and the keep-visible shortcut. The
+shortcut field records a real combination: click it, press the keys, Backspace
+clears it. A bare letter is refused, since it would fire while you type
+anywhere else.
+
+**Updates.** See below.
+
+Changes apply the moment you save: the widget repositions, the language
+switches, the shortcut rebinds, the next call is rescheduled. Nothing restarts.
+The window writes the same `config.json` you can still edit by hand, and
+**Reveal** opens it.
 
 <br clear="all">
+
+### Updating
+
+The widget updates itself from this repository. **Check now** compares your
+checkout against the latest commit on `main`; **Update and restart** fetches it,
+installs any new dependencies, and relaunches. With **Check daily** on, it looks
+once a day and tells you when something is waiting, once per version, and never
+installs anything on its own.
+
+The part worth knowing: **an update that breaks the test suite is undone.**
+The commit you were on is recorded first, the 55 tests run before the restart,
+and a failure rolls the checkout back to where it was. A bad push upstream
+cannot leave you with a dead widget.
+
+Two refusals, both deliberate. A copy with uncommitted local changes is never
+overwritten, because someone is clearly working in it. And a checkout whose
+revision cannot be read is reported as unknown rather than offered an update,
+since overwriting something we cannot identify is worse than saying nothing.
+
+Updating by hand does the same thing:
+
+```bash
+cd ~/.claude-marge && git pull && npm install && npm test
+```
 
 ### The tray menu
 
@@ -180,6 +218,7 @@ type anywhere else.
 | **Keep visible** | Pin the widget open, no hovering. Also on a global shortcut, `Cmd/Ctrl+Shift+M` by default. |
 | **Restart the widget** | Relaunch through the supervisor, handy after a config change. |
 | Settings… | Open the settings window. |
+| Check for updates… | Look at the repository and open Settings on the result. |
 | Reveal the config file | Open `config.json` in your editor. |
 | Quit | Really quits. The login item restarts the widget after a crash, never after a deliberate quit. |
 
@@ -199,7 +238,7 @@ Useful commands:
 npm start                      # hover behaviour
 npm run demo                   # stays open, handy for positioning
 npm run usage                  # raw quotas as JSON, no interface
-npm test                       # 45 tests
+npm test                       # 55 tests
 tail ~/.claude-marge/widget.log   # one line per state change
 ```
 
@@ -207,7 +246,7 @@ tail ~/.claude-marge/widget.log   # one line per state change
 
 ## What is verified
 
-`npm test` runs 45 tests, covering the places where a mistake shows up
+`npm test` runs 55 tests, covering the places where a mistake shows up
 immediately.
 
 **Hover geometry, 14 tests.** The right edge of a multi-monitor setup, the
@@ -224,9 +263,17 @@ on the network.
 quiet, the next level up speaks again, a new reset window arms it afresh, and
 the ledger forgets quotas the account stopped exposing.
 
+**The seven languages, 3 tests.** They must expose exactly the same keys: a
+missing one does not crash, it quietly prints `undefined` in someone's
+interface.
+
 **Persisted state, 7 tests.** The failure count and the last real reading
 survive a restart, a reading older than a day is dropped rather than shown as
 current, and a corrupted state file does not bring the widget down.
+
+**Updating, 7 tests.** A malformed answer from GitHub produces nothing rather
+than half an object, an unreadable local revision is never treated as an update,
+and a directory without git is reported as unable to update itself.
 
 **Backoff, 8 tests.** Asking too often is what earns an HTTP 429, so the widget
 polls every two minutes, doubles the wait after each failure up to fifteen

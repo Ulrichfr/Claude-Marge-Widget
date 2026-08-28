@@ -157,26 +157,65 @@ une fois par seuil, par quota et par fenêtre de reset, pour qu'une limite que t
 dépasses déjà ne te prévienne pas toutes les deux minutes. Mets `[]` pour le
 silence complet. `shortcut` bascule l'épinglage ; mets `""` pour n'enregistrer
 aucun raccourci. `language` vaut `auto`, ou l'un de `en`, `fr`, `es`, `de`,
-`it`, `zh`, `ja`.
+`it`, `zh`, `ja`. `checkUpdates` active ou coupe la vérification quotidienne du
+dépôt.
 
 ### Les réglages
 
-<img src="docs/settings.png" alt="La fenêtre de réglages : placement, données, alertes et système" width="420" align="right">
+<img src="docs/settings-fr.png" alt="La fenêtre de réglages : placement, données, alertes, système et mises à jour" width="330" align="right">
 
-Tout est dans le menu de la barre d'état, sous **Réglages**. Le placement le
-long du bord droit, la fréquence de vérification, les seuils qui doivent te
-prévenir, le raccourci « Garder visible », la langue, et le lancement au
-démarrage.
+Tout est dans le menu de la barre d'état, sous **Réglages**. La fenêtre fait 520
+points de large et défile ; la capture de droite montre le panneau entier.
 
-Les changements s'appliquent dès l'enregistrement : aucun redémarrage pour voir
-un curseur bouger. La fenêtre écrit le même `config.json` que tu peux toujours
-modifier à la main, et **Montrer** l'ouvre.
+**Placement.** Où se pose la pilule le long du bord droit, et si elle suit la
+souris d'un écran à l'autre.
 
-Le champ du raccourci enregistre une vraie combinaison. Tu cliques, tu tapes,
-et retour arrière l'efface. Une lettre seule est refusée, elle se déclencherait
-pendant que tu écris ailleurs.
+**Données.** À quelle fréquence interroger. Deux minutes par défaut, parce que
+demander plus souvent est exactement ce qui vaut un refus, et que ces chiffres
+ne bougent pas plus vite que ça.
+
+**Alertes.** Quels seuils doivent te prévenir avant le plafond. Chacun parle une
+fois par quota et par fenêtre de reset, pour qu'une limite que tu dépasses déjà
+ne te notifie pas toutes les deux minutes.
+
+**Système.** Le lancement au démarrage, la langue, et le raccourci « Garder
+visible ». Le champ de raccourci enregistre une vraie combinaison : tu cliques,
+tu tapes, retour arrière efface. Une lettre seule est refusée, elle se
+déclencherait pendant que tu écris ailleurs.
+
+**Mises à jour.** Voir ci-dessous.
+
+Les changements s'appliquent dès l'enregistrement : le widget se repositionne,
+la langue bascule, le raccourci se réenregistre, le prochain appel est
+replanifié. Rien ne redémarre. La fenêtre écrit le même `config.json` que tu
+peux toujours modifier à la main, et **Montrer** l'ouvre.
 
 <br clear="all">
+
+### Les mises à jour
+
+Le widget se met à jour depuis ce dépôt. **Vérifier** compare ta copie au
+dernier commit de `main` ; **Mettre à jour et relancer** le récupère, installe
+les éventuelles nouvelles dépendances et redémarre. Avec **Vérifier chaque
+jour**, il regarde une fois par jour et te dit quand quelque chose attend, une
+seule fois par version, sans jamais rien installer de lui-même.
+
+Le point qui compte : **une mise à jour qui casse les tests est annulée.** Le
+commit d'origine est noté d'abord, les 55 tests tournent avant la relance, et un
+échec ramène la copie exactement où elle était. Une mauvaise publication en
+amont ne peut pas te laisser un widget mort.
+
+Deux refus, tous deux volontaires. Une copie avec des modifications non
+commitées n'est jamais écrasée, parce que quelqu'un travaille manifestement
+dedans. Et une copie dont la révision est illisible est signalée comme inconnue
+plutôt que proposée à la mise à jour : écraser ce qu'on ne sait pas identifier
+est pire que se taire.
+
+À la main, c'est la même chose :
+
+```bash
+cd ~/.claude-marge && git pull && npm install && npm test
+```
 
 ### Le menu de la barre d'état
 
@@ -188,6 +227,7 @@ pendant que tu écris ailleurs.
 | **Garder visible** | Épingle le widget ouvert, sans survol. Aussi sur un raccourci global, `Cmd/Ctrl+Maj+M` par défaut. |
 | **Relancer le widget** | Redémarre par le superviseur, pratique après un changement de configuration. |
 | Réglages… | Ouvre la fenêtre de réglages. |
+| Rechercher des mises à jour… | Interroge le dépôt et ouvre les Réglages sur le résultat. |
 | Montrer le fichier de configuration | Ouvre `config.json` dans ton éditeur. |
 | Quitter | Quitte vraiment. Le démarrage automatique relance après un plantage, jamais après un « Quitter » volontaire. |
 
@@ -208,7 +248,7 @@ Commandes utiles :
 npm start                         # comportement au survol
 npm run demo                      # reste ouvert, pratique pour régler la position
 npm run usage                     # les quotas bruts en JSON, sans interface
-npm test                          # 45 tests
+npm test                          # 55 tests
 tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 ```
 
@@ -216,7 +256,7 @@ tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 
 ## Ce qui est vérifié
 
-`npm test` lance 45 tests, sur les endroits où une erreur se voit tout de suite.
+`npm test` lance 55 tests, sur les endroits où une erreur se voit tout de suite.
 
 **La géométrie du survol, 14 tests.** Le bord droit en multi-écrans, la fenêtre
 qui reste dans l'écran quel que soit le nombre de modèles, et surtout l'absence
@@ -232,10 +272,19 @@ qu'elle est au lieu d'être mise sur le dos du réseau.
 tait, le seuil supérieur reparle, une nouvelle fenêtre de reset réarme, et le
 registre oublie les quotas que le compte n'expose plus.
 
+**Les sept langues, 3 tests.** Elles doivent exposer exactement les mêmes clés :
+une clé manquante ne plante pas, elle écrit silencieusement `undefined` dans
+l'interface de quelqu'un.
+
 **L'état persisté, 7 tests.** Le compteur d'échecs et la dernière vraie lecture
 survivent à un redémarrage, une lecture de plus d'un jour est écartée plutôt
 qu'affichée comme actuelle, et un fichier d'état corrompu ne fait pas tomber le
 widget.
+
+**La mise à jour, 7 tests.** Une réponse malformée de GitHub ne produit rien
+plutôt qu'un demi-objet, une révision locale illisible n'est jamais prise pour
+une mise à jour, et un dossier sans git est signalé comme incapable de se mettre
+à jour.
 
 **Le ralentissement, 8 tests.** Interroger trop souvent, c'est exactement ce qui
 vaut un HTTP 429 : le widget interroge toutes les deux minutes, double l'attente

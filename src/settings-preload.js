@@ -5,5 +5,8 @@ contextBridge.exposeInMainWorld('settings', {
   load: () => ipcRenderer.invoke('settings:load'),
   save: (config) => ipcRenderer.invoke('settings:save', config),
   reset: () => ipcRenderer.invoke('settings:reset'),
-  reveal: () => ipcRenderer.send('settings:reveal')
+  reveal: () => ipcRenderer.send('settings:reveal'),
+  checkUpdate: () => ipcRenderer.invoke('updates:check'),
+  applyUpdate: () => ipcRenderer.invoke('updates:apply'),
+  onUpdateStep: (fn) => ipcRenderer.on('updates:step', (_e, step) => fn(step))
 });
