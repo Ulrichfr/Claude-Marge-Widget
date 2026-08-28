@@ -179,8 +179,19 @@ function render() {
     panelRows.appendChild(buildPanelRow(g));
   });
 
-  panelNote.textContent = new Date(data.fetchedAt)
+  const readAt = new Date(data.fetchedAt)
     .toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
+  panelNote.textContent = data.stale ? T.stale(readAt) : readAt;
+  panelNote.classList.toggle('warn', !!data.stale);
+
+  // A failed call keeps the last real numbers on screen and says why they are
+  // old. A blank widget would teach less than slightly stale figures.
+  if (data.stale) {
+    const why = document.createElement('div');
+    why.className = 'panel-error stale';
+    why.innerHTML = T.errors[data.reason] || T.errors.unknown;
+    panelRows.appendChild(why);
+  }
 
   if (revealed) animateIn();
 }

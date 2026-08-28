@@ -257,6 +257,14 @@ html, body {
 .row.muted .row-name,
 .row.muted .row-foot { color: rgba(247, 247, 248, 0.62); }
 
+.panel-note.warn { color: rgba(233, 225, 31, 0.72); }
+
+.panel-error.stale {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
 .panel-error {
   font-size: 13px;
   line-height: 1.45;

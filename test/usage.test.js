@@ -75,4 +75,15 @@ test('an empty response does not break normalisation', () => {
   assert.strictEqual(r.ok, true);
   assert.deepStrictEqual(r.gauges, []);
 });
+
+const { reasonFor } = require('../src/usage');
+
+test('a failure is named for what it is, not blamed on the network', () => {
+  assert.strictEqual(reasonFor({ status: 429 }), 'rate-limited');
+  assert.strictEqual(reasonFor({ status: 401 }), 'unauthorized');
+  assert.strictEqual(reasonFor({ status: 403 }), 'unauthorized');
+  assert.strictEqual(reasonFor({ status: 503 }), 'server');
+  assert.strictEqual(reasonFor({}), 'network', 'only a real transport failure is a network error');
+});
+
 console.log(`\n${passed} normalisation tests passed`);

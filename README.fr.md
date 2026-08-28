@@ -2,7 +2,7 @@
 
 # Claude Marge Widget
 
-**Tes limites Claude Max, au bord de l'écran.**
+**Tes limites d'usage Claude, Pro et Max, au bord de l'écran.**
 La souris touche le bord droit, il glisse. Elle s'en va, il disparaît.
 
 <img src="docs/hero.png" alt="Le widget ouvert au bord droit de l'écran, avec la session, la semaine et les limites par modèle" width="820">
@@ -49,7 +49,7 @@ bash ~/.claude-marge/uninstall.sh
 
 ## Un anneau par quota, parce que ce ne sont pas les mêmes
 
-Claude Max n'a pas une limite mais plusieurs : une fenêtre glissante de cinq
+Un abonnement Claude n'a pas une limite mais plusieurs : une fenêtre glissante de cinq
 heures, un budget hebdomadaire tous modèles confondus, et un budget hebdomadaire
 distinct pour chaque modèle lourd. Celle qui t'arrête est rarement celle que tu
 surveillais.
@@ -122,8 +122,13 @@ plutôt que de déborder en bas.
 | **Linux, Wayland** | Partiel | Electron ne sait pas positionner ses fenêtres sous Wayland. Le service force X11 ; en lancement manuel, ajouter `ELECTRON_OZONE_PLATFORM_HINT=x11`. |
 | **Windows** | Non pris en charge | La couche de données fonctionnerait, le placement et le démarrage automatique ne sont ni écrits ni testés. Contributions bienvenues. |
 
-Prérequis : **Node.js 18+**, `git`, et Claude Code connecté à un compte avec des
-limites d'usage (Pro ou Max).
+**Offres.** Claude **Pro** et **Claude Max** exposent ces limites par le même
+point d'entrée, et le widget affiche ce que le compte renvoie : deux anneaux sur
+une offre qui expose moins de quotas, cinq sur une autre. Développé et testé sur
+Max ; Pro devrait se comporter à l'identique, et un retour dans un sens comme
+dans l'autre est bienvenu.
+
+Prérequis : **Node.js 18+**, `git`, et Claude Code connecté.
 
 Deux détails Linux qui valent d'être sus. Sans compositeur, la transparence
 tombe et la pilule s'affiche en noir opaque au lieu de se fondre dans le bureau.
@@ -156,7 +161,7 @@ Commandes utiles :
 npm start                         # comportement au survol
 npm run demo                      # reste ouvert, pratique pour régler la position
 npm run usage                     # les quotas bruts en JSON, sans interface
-npm test                          # 21 tests
+npm test                          # 30 tests
 tail ~/.claude-marge/widget.log   # une ligne par changement d'état
 ```
 
@@ -171,9 +176,17 @@ qui reste dans l'écran quel que soit le nombre de modèles, et surtout l'absenc
 de clignotement : la zone qui garde le widget ouvert doit toujours contenir la
 bande qui le déclenche.
 
-**La normalisation des quotas, 7 tests.** Un quota absent ne devient jamais un
-zéro affiché, un modèle exposé deux fois par l'API n'apparaît qu'une fois, et
-une réponse vide ne fait pas tomber le widget.
+**La normalisation des quotas, 8 tests.** Un quota absent ne devient jamais un
+zéro affiché, un modèle exposé deux fois par l'API n'apparaît qu'une fois, une
+réponse vide ne fait pas tomber le widget, et une panne est nommée pour ce
+qu'elle est au lieu d'être mise sur le dos du réseau.
+
+**Le ralentissement, 8 tests.** Interroger trop souvent, c'est exactement ce qui
+vaut un HTTP 429 : le widget interroge toutes les deux minutes, double l'attente
+après chaque échec jusqu'à quinze minutes, obéit à `Retry-After` quand le
+serveur en envoie un, et ne relance pas un appel juste parce que tu as survolé.
+Un appel raté n'efface jamais l'affichage : les derniers vrais chiffres restent,
+marqués comme datés, avec la raison en dessous.
 
 Pour vérifier le rendu sur une machine sans compositeur, ou en intégration
 continue :

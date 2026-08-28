@@ -63,7 +63,14 @@ function httpsGetJson(token) {
       let body = '';
       res.on('data', (c) => { body += c; });
       res.on('end', () => {
-        if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
+        if (res.statusCode !== 200) {
+          const err = new Error(`HTTP ${res.statusCode}`);
+          err.status = res.statusCode;
+          // The endpoint tells us how long to wait when it throttles us.
+          const after = parseInt(res.headers['retry-after'], 10);
+          if (Number.isFinite(after)) err.retryAfter = after;
+          return reject(err);
+        }
         try { resolve(JSON.parse(body)); } catch (e) { reject(e); }
       });
     });
@@ -173,6 +180,16 @@ function normalize(raw) {
   };
 }
 
+/** Turn a failed request into a state a human can act on. */
+function reasonFor(err) {
+  const status = err.status;
+  if (status === 401 || status === 403) return 'unauthorized';
+  if (status === 429) return 'rate-limited';
+  if (status >= 500) return 'server';
+  if (status) return 'server';
+  return 'network';
+}
+
 async function fetchUsage() {
   const cred = readCredentials();
   if (!cred || !cred.accessToken) {
@@ -186,12 +203,21 @@ async function fetchUsage() {
   try {
     return normalize(await httpsGetJson(cred.accessToken));
   } catch (err) {
-    const reason = /HTTP 401|HTTP 403/.test(err.message) ? 'unauthorized' : 'network';
-    return { ok: false, reason, detail: err.message, fetchedAt: Date.now(), gauges: [] };
+    // Naming the failure precisely matters: answering "cannot reach the API"
+    // when the API answered perfectly well, just to say "slow down", sends
+    // people debugging their network for nothing.
+    return {
+      ok: false,
+      reason: reasonFor(err),
+      retryAfter: err.retryAfter,
+      detail: err.message,
+      fetchedAt: Date.now(),
+      gauges: []
+    };
   }
 }
 
-module.exports = { fetchUsage, readCredentials, normalize };
+module.exports = { fetchUsage, readCredentials, normalize, reasonFor };
 
 if (require.main === module) {
   fetchUsage().then((r) => console.log(JSON.stringify(r, null, 2)));

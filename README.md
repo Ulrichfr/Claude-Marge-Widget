@@ -2,7 +2,7 @@
 
 # Claude Marge Widget
 
-**Your Claude Max limits, at the edge of the screen.**
+**Your Claude usage limits, Pro and Max, at the edge of the screen.**
 Touch the right edge with your mouse and it slides in. Move away and it is gone.
 
 <img src="docs/hero.png" alt="The widget revealed at the right edge of the screen, showing session, weekly and per-model limits" width="820">
@@ -48,7 +48,7 @@ bash ~/.claude-marge/uninstall.sh
 
 ## One ring per quota, because they are not the same quota
 
-Claude Max does not have a single limit. There is a rolling five hour session
+A Claude subscription does not have a single limit. There is a rolling five hour session
 window, a weekly budget across every model, and a separate weekly budget for
 each heavy model. The one that stops you is rarely the one you were watching.
 
@@ -118,8 +118,12 @@ running off the bottom.
 | **Linux, Wayland** | Partial | Electron cannot position windows under Wayland. The service forces X11; launch manually with `ELECTRON_OZONE_PLATFORM_HINT=x11`. |
 | **Windows** | Not supported | The data layer would work, the placement and autostart are not written or tested. Contributions welcome. |
 
-Requirements: **Node.js 18+**, `git`, and Claude Code signed in to a Claude
-account with usage limits (Pro or Max).
+**Plans.** Claude **Pro** and **Claude Max** both expose these limits through the
+same endpoint, and the widget reads whatever the account returns: two rings on a
+plan with fewer quotas, five on one with more. Developed and tested on Max; Pro
+should work identically, and a report either way is welcome.
+
+Requirements: **Node.js 18+**, `git`, and Claude Code signed in.
 
 Two Linux details worth knowing. Without a compositor, transparency falls back
 to an opaque black pill instead of blending into the desktop. And the tray icon
@@ -151,7 +155,7 @@ Useful commands:
 npm start                      # hover behaviour
 npm run demo                   # stays open, handy for positioning
 npm run usage                  # raw quotas as JSON, no interface
-npm test                       # 21 tests
+npm test                       # 30 tests
 tail ~/.claude-marge/widget.log   # one line per state change
 ```
 
@@ -166,9 +170,16 @@ window staying on screen whatever the number of models, and above all the
 absence of flicker: the area that keeps the widget open must always contain the
 strip that triggers it.
 
-**Quota normalisation, 7 tests.** A missing quota never becomes a displayed
-zero, a model exposed twice by the API appears once, and an empty response does
-not bring the widget down.
+**Quota normalisation, 8 tests.** A missing quota never becomes a displayed
+zero, a model exposed twice by the API appears once, an empty response does not
+bring the widget down, and a failure is named for what it is rather than blamed
+on the network.
+
+**Backoff, 8 tests.** Asking too often is what earns an HTTP 429, so the widget
+polls every two minutes, doubles the wait after each failure up to fifteen
+minutes, obeys `Retry-After` when the server sends one, and does not fetch again
+just because you hovered. A failed call never wipes the display: the last real
+numbers stay on screen, marked stale, with the reason underneath.
 
 For a render check on a machine with no compositor, or in CI:
 

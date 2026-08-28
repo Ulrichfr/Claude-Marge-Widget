@@ -15,6 +15,7 @@ const fs = require('fs');
 const os = require('os');
 const { fetchUsage } = require('./usage');
 const I18N = require('./i18n');
+const { nextDelay, shouldRefreshOnReveal } = require('./schedule');
 const {
   G, layout, boundsForDisplay: computeBounds,
   isOuterRightEdge, inHotZone, insideKeepAlive
@@ -29,7 +30,7 @@ const DEMO = process.env.MARGE_DEMO === '1' || process.argv.includes('--demo');
 const CONFIG_PATH = path.join(os.homedir(), '.config', 'claude-marge', 'config.json');
 const DEFAULTS = {
   verticalAnchor: 0.45,   // 0 = top of the screen, 1 = bottom
-  refreshSeconds: 60,
+  refreshSeconds: 120,
   followCursorDisplay: true  // show up on whichever display holds the cursor
 };
 
@@ -49,6 +50,9 @@ let hideTimer = null;
 let pollTimer = null;
 let refreshTimer = null;
 let lastData = { ok: false, reason: 'loading', gauges: [] };
+let lastGood = null;      // the last answer that actually carried numbers
+let failures = 0;         // consecutive failures, drives the backoff
+let inFlight = false;
 let ready = false; // the page finished loading and is listening
 let currentDisplayId = null;
 
@@ -144,7 +148,7 @@ function show() {
   clearTimeout(hideTimer);
   win.showInactive();
   if (ready) win.webContents.send('reveal', true);
-  if (Date.now() - (lastData.fetchedAt || 0) > 20000) refresh();
+  if (shouldRefreshOnReveal(lastGood && lastGood.fetchedAt, failures, Date.now())) refresh();
 }
 
 function scheduleHide() {
@@ -192,19 +196,46 @@ function logState(data) {
   const describe = (g) => `${g.model || g.kind} ${g.percent}%`;
   const state = data.ok
     ? `ok ${(data.gauges || []).map(describe).join(', ')}`
-    : `failed ${data.reason}`;
+    : `failed ${data.reason} (attempt ${failures}, next try in ` +
+      `${Math.round(nextDelay(data, failures, config.refreshSeconds) / 1000)}s)`;
   if (state === lastLogged) return;
   lastLogged = state;
   console.log(`[${new Date().toISOString()}] ${state}`);
 }
 
+/**
+ * Ask once, then schedule the next call. A failure never wipes the display:
+ * the last real numbers stay on screen, marked stale, because a blank widget
+ * teaches less than slightly old figures plus the reason they are old.
+ */
 async function refresh() {
-  const data = await fetchUsage();
-  lastData = data;
+  if (inFlight) return;
+  inFlight = true;
+  let data;
+  try {
+    data = await fetchUsage();
+  } finally {
+    inFlight = false;
+  }
+
+  if (data.ok) {
+    failures = 0;
+    lastGood = data;
+    lastData = data;
+  } else {
+    failures += 1;
+    lastData = lastGood
+      ? { ...lastGood, stale: true, reason: data.reason, checkedAt: data.fetchedAt }
+      : data;
+  }
+
   logState(data);
   if (data.ok && data.gauges.length) setRows(data.gauges.length);
-  if (win && !win.isDestroyed()) win.webContents.send('usage', data);
+  if (win && !win.isDestroyed()) win.webContents.send('usage', lastData);
   updateTrayTitle();
+
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(refresh, nextDelay(data, failures, config.refreshSeconds));
 }
 
 function updateTrayTitle() {
@@ -258,7 +289,7 @@ app.whenReady().then(() => {
   refresh();
   pollTimer = setInterval(poll, 45);
   if (DEMO) show(); // showcase mode: stays open, no cursor needed
-  refreshTimer = setInterval(refresh, Math.max(20, config.refreshSeconds) * 1000);
+
 });
 
 ipcMain.on('request-refresh', () => refresh());
@@ -285,5 +316,5 @@ if (process.env.MARGE_CAPTURE) {
 app.on('window-all-closed', () => {});
 app.on('before-quit', () => {
   clearInterval(pollTimer);
-  clearInterval(refreshTimer);
+  clearTimeout(refreshTimer);
 });
