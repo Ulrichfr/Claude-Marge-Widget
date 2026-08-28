@@ -8,7 +8,7 @@
   <array>
     <string>/bin/sh</string>
     <string>-c</string>
-    <string>cd "$HOME/claude-usage" &amp;&amp; ./node_modules/.bin/electron .</string>
+    <string>exec "$HOME/claude-usage/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron" "$HOME/claude-usage"</string>
   </array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>

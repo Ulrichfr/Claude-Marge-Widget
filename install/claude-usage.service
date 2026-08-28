@@ -8,7 +8,9 @@ Type=simple
 # Electron ne sait pas se positionner sous Wayland : on force X11.
 Environment=ELECTRON_OZONE_PLATFORM_HINT=x11
 WorkingDirectory=%h/claude-usage
-ExecStart=%h/claude-usage/node_modules/.bin/electron %h/claude-usage
+# On appelle le binaire Electron directement : le lanceur npm a besoin de
+# node dans le PATH, que systemd ne fournit pas.
+ExecStart=%h/claude-usage/node_modules/electron/dist/electron %h/claude-usage
 Restart=on-failure
 RestartSec=5
 
