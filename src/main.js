@@ -101,7 +101,9 @@ let inFlight = false;
 let pinned = false;       // pill stays out; the panel still follows the cursor
 let panelOpen = false;
 let alertLedger = store.read().alerts || {};
-let floorSeconds = store.read().floorSeconds || 0;  // the pace this account sustains
+// Starts at the configured interval rather than zero, or the first refresh
+// logs a pace change from nothing to the value it already had.
+let floorSeconds = store.read().floorSeconds || 0;
 let cleanReads = 0;
 if (lastGood) lastData = { ...lastGood, stale: true, reason: 'loading' };
 let ready = false; // the page finished loading and is listening
@@ -418,10 +420,10 @@ async function refresh() {
       : data;
   }
 
-  const previousFloor = floorSeconds;
+  const previousFloor = floorSeconds || config.refreshSeconds;
   floorSeconds = adjustFloor(floorSeconds, data, config.refreshSeconds, cleanReads);
   if (floorSeconds !== previousFloor) {
-    trace(`pace now one call every ${floorSeconds}s (was ${previousFloor || config.refreshSeconds}s)`);
+    trace(`pace now one call every ${floorSeconds}s (was ${previousFloor}s)`);
     if (floorSeconds < previousFloor) cleanReads = 0;
   }
   store.save({
