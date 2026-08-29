@@ -197,4 +197,22 @@ test('screens of different resolutions each get their own layout', () => {
   assert.ok(b.y + b.height <= small.height, 'the small screen would overflow');
 });
 
+
+test('a move that changes nothing is not a move', () => {
+  const b = { x: 1220, y: 300, width: 700, height: 552 };
+  assert.strictEqual(g.sameBounds(b, { ...b }), true,
+    'repositioning emits the event that triggers repositioning: identical bounds must be a no-op');
+  assert.strictEqual(g.sameBounds(b, { ...b, y: 301 }), false);
+  assert.strictEqual(g.sameBounds(b, { ...b, height: 553 }), false);
+  assert.strictEqual(g.sameBounds(null, b), false);
+});
+
+test('placing on the same display twice computes the same rectangle', () => {
+  const screen = { x: 0, y: 0, width: 1920, height: 1080 };
+  const first = g.boundsForDisplay(screen, 3, 0.45);
+  const second = g.boundsForDisplay(screen, 3, 0.45);
+  assert.ok(g.sameBounds(first, second),
+    'if this ever drifts, the widget would reposition itself for ever');
+});
+
 console.log(`\n${passed} geometry tests passed`);

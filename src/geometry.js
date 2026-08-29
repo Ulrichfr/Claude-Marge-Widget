@@ -138,7 +138,19 @@ function pickDisplay({ displays, primaryId, cursorPoint, follow, preferredId }) 
   return primary;
 }
 
+/**
+ * Are two window rectangles the same?
+ *
+ * Repositioning a window emits a display-metrics-changed event, which is
+ * handled by repositioning the window. Without this comparison the two feed
+ * each other several times a second, for ever.
+ */
+function sameBounds(a, b) {
+  if (!a || !b) return false;
+  return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+}
+
 module.exports = {
   G, STEPS, layout, boundsForDisplay, pillBand,
-  isOuterRightEdge, inHotZone, insideKeepAlive, pickDisplay
+  isOuterRightEdge, inHotZone, insideKeepAlive, pickDisplay, sameBounds
 };

@@ -25,7 +25,7 @@ const alerts = require('./alerts');
 const updater = require('./updater');
 const {
   G, layout, boundsForDisplay: computeBounds,
-  isOuterRightEdge, inHotZone, insideKeepAlive, pickDisplay
+  isOuterRightEdge, inHotZone, insideKeepAlive, pickDisplay, sameBounds
 } = require('./geometry');
 
 // The number of rings depends on the account: every model carries its own
@@ -134,7 +134,14 @@ function preferredDisplay() {
  * changes. Without this the widget keeps its old coordinates and ends up drawn
  * outside every desktop, which looks exactly like a crash.
  */
+let displayTimer = null;
+/** Screens announce themselves in bursts; act once, when they settle. */
 function onDisplaysChanged() {
+  clearTimeout(displayTimer);
+  displayTimer = setTimeout(applyDisplayChange, 400);
+}
+
+function applyDisplayChange() {
   const displays = screen.getAllDisplays();
   const stillThere = displays.some((d) => d.id === currentDisplayId);
   const target = stillThere && config.followCursorDisplay
@@ -148,7 +155,12 @@ function onDisplaysChanged() {
 function placeOn(display) {
   if (!win || win.isDestroyed()) return;
   currentDisplayId = display.id;
-  win.setBounds(boundsForDisplay(display));
+  const next = boundsForDisplay(display);
+  // Moving the window emits display-metrics-changed, which moves the window.
+  // Skipping a move that changes nothing is what stops the two feeding each
+  // other several times a second.
+  if (sameBounds(win.getBounds(), next)) return;
+  win.setBounds(next);
 }
 
 // --- Window -----------------------------------------------------------------
