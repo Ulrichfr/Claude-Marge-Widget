@@ -13,7 +13,17 @@
 
 set -euo pipefail
 
-APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# `marge` s'installe comme lien symbolique dans ~/.local/bin. Sans resoudre le
+# lien, APP_DIR pointe sur ~/.local, et tout ce qui touche au depot ou au
+# journal echoue en silence : update ne met rien a jour, status ne trouve
+# aucune lecture, logs suit un fichier inexistant.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  LINK_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  case "$SOURCE" in /*) ;; *) SOURCE="$LINK_DIR/$SOURCE" ;; esac
+done
+APP_DIR="$(cd -P "$(dirname "$SOURCE")/.." && pwd)"
 LABEL="com.claudemarge.widget"
 UNIT="claude-marge.service"
 LOG="$APP_DIR/widget.log"
@@ -62,8 +72,20 @@ case "${1:-start}" in
     echo "Open the tray icon and choose Settings."
     ;;
   update)
+    # Une mise a jour qui ne trouve pas son depot doit le dire, pas continuer.
+    [ -d "$APP_DIR/.git" ] || {
+      echo "marge: $APP_DIR n'est pas une copie git, mise a jour impossible" >&2
+      exit 1
+    }
+    BEFORE="$(git -C "$APP_DIR" rev-parse HEAD)"
     git -C "$APP_DIR" pull --ff-only
     ( cd "$APP_DIR" && npm install --no-audit --no-fund >/dev/null && npm test >/dev/null )
+    AFTER="$(git -C "$APP_DIR" rev-parse HEAD)"
+    if [ "$BEFORE" = "$AFTER" ]; then
+      echo "marge: deja a jour ($(git -C "$APP_DIR" log --oneline -1))"
+    else
+      echo "marge: $(git -C "$APP_DIR" log --oneline -1 "$BEFORE" | cut -c1-7) -> $(git -C "$APP_DIR" log --oneline -1 | cut -c1-7)"
+    fi
     start
     ;;
   *)
